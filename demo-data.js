@@ -82,7 +82,20 @@ function seed() {
       { user_id: LUIS, business_id: BIZ, name: 'Luis', role: 'crew', color: '#0E8FB8', phone: '(919) 555-0166', active: true, created_at: ago(700) }
     ],
     clients, jobs, bills, time_entries: te,
-    member_pay: [{ user_id: ROSA, business_id: BIZ, hourly_rate: 40 }, { user_id: ANA, business_id: BIZ, hourly_rate: 32 }, { user_id: LUIS, business_id: BIZ, hourly_rate: 22 }]
+    member_pay: [{ user_id: ROSA, business_id: BIZ, hourly_rate: 40 }, { user_id: ANA, business_id: BIZ, hourly_rate: 32 }, { user_id: LUIS, business_id: BIZ, hourly_rate: 22 }],
+    messages: (() => { const ago = m => new Date(Date.now() - m * 60000).toISOString(); const cid = n => (clients.find(c => c.name === n) || {}).id;
+      return [
+        { id: uid(), business_id: BIZ, client_id: null, user_id: ROSA, body: 'Safety meeting Monday 7 AM at the shop. Coffee on me.', photo: null, tags: [], pinned: true, flag_open: false, created_at: ago(3000) },
+        { id: uid(), business_id: BIZ, client_id: null, user_id: ANA, body: '@Chepe van 2 needs an oil change, light came on.', photo: null, tags: [ROSA], pinned: false, flag_open: true, flagged_by: ANA, created_at: ago(900) },
+        { id: uid(), business_id: BIZ, client_id: cid('The Hendersons'), user_id: ROSA, body: 'Gas shutoff is behind the furnace. Dog in the backyard.', photo: null, tags: [], pinned: true, flag_open: false, created_at: ago(2000) },
+        { id: uid(), business_id: BIZ, client_id: cid('The Hendersons'), user_id: ANA, body: 'Old tank was leaking at the base. Pulling it now.', photo: null, tags: [], pinned: false, flag_open: false, created_at: ago(120) },
+        { id: uid(), business_id: BIZ, client_id: cid('Oak St Rentals'), user_id: LUIS, body: 'Found water damage behind the bathroom wall. @Chepe want me to open it up more?', photo: null, tags: [ROSA], pinned: false, flag_open: true, flagged_by: LUIS, created_at: ago(45) }
+      ]; })(),
+    subs: [
+      { id: uid(), business_id: BIZ, name: 'Bull City Electric', trade: 'Electrician', phone: '(919) 555-0161', email: '', coi_expires: '2027-03-31', w9: true, owed: 850, paid_ytd: 6400, notes: '' },
+      { id: uid(), business_id: BIZ, name: 'Triangle Drywall', trade: 'Drywall', phone: '(919) 555-0162', email: '', coi_expires: ymd(new Date(Date.now() + 9 * 864e5)), w9: true, owed: 1400, paid_ytd: 9200, notes: '' },
+      { id: uid(), business_id: BIZ, name: 'Capital HVAC', trade: 'HVAC', phone: '(919) 555-0163', email: '', coi_expires: '2026-10-31', w9: false, owed: 0, paid_ytd: 2100, notes: '' }
+    ]
   };
 }
 let db; try { db = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
@@ -175,6 +188,11 @@ async function rpc(name, a) {
   if (name === 'clock_out') {
     const e = db.time_entries.find(x => x.user_id === me && !x.clock_out); if (!e) return { data: null, error: { message: 'Not clocked in' } };
     e.clock_out = new Date().toISOString(); return done(e.id);
+  }
+  if (name === 'msg_mark') {
+    const m = (db.messages || []).find(r => r.id === a.p_id); if (!m) return { data: false, error: null };
+    if (a.p_what === 'pin') m.pinned = !m.pinned; else if (a.p_what === 'flag') Object.assign(m, { flag_open: true, flagged_by: me, resolved_by: null }); else if (a.p_what === 'resolve') Object.assign(m, { flag_open: false, resolved_by: me });
+    return done(true);
   }
   return { data: null, error: { message: 'Not available in the demo' } };
 }

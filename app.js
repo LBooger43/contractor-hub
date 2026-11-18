@@ -33,7 +33,9 @@ const S = {
   session: null, me: null, biz: null, members: [], clients: [], jobs: [], todayJobs: [], bills: [],
   tab: 'today', day: ymd(new Date()), week: ymd(weekStart(new Date())), who: 'all', filter: 'all', q: '',
   modal: null, form: {}, authMode: 'in', loading: true, toast: '',
-  entries: [], openEntry: null, pay: [], hoursWeek: ymd(weekStart(new Date())), hoursWho: null, hJobs: [], hoursView: 'hours', clockJob: null
+  entries: [], openEntry: null, pay: [], hoursWeek: ymd(weekStart(new Date())), hoursWho: null, hJobs: [], hoursView: 'hours', clockJob: null,
+  msgs: [], subs: [], chatReady: true, subsReady: true, crewTab: 'emp',
+  chat: { open: null, tab: 'threads', draft: '', tags: [], photo: null, tagOpen: false, menu: null }
 };
 const isOwner = () => S.me && S.me.role === 'owner';
 const member = id => S.members.find(m => m.user_id === id);
@@ -50,6 +52,10 @@ const I = {
   me: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21 C5 15.5 19 15.5 20 21"/></svg>`,
   send: c => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 L10 14"/><path d="M21 3 L14 21 L10 14 L3 10 Z"/></svg>`,
   plus: c => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5 V19 M5 12 H19"/></svg>`,
+  chat: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5 H20 V16 H11 L6 20 V16 H4 Z"/><path d="M8 9.5 H16 M8 12.5 H13" stroke-linecap="round"/></svg>`,
+  hat: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 18 H21.5"/><path d="M5 18 V15 A7 7 0 0 1 19 15 V18"/><path d="M10 8.5 V12 M14 8.5 V12"/></svg>`,
+  money: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>`,
+  camera: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 8 H7 L9 5 H15 L17 8 H21 V19 H3 Z"/><circle cx="12" cy="13" r="3.5"/></svg>`,
   pin: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21 C12 21 5 14.5 5 9.5 A7 7 0 0 1 19 9.5 C19 14.5 12 21 12 21 Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>`
 };
 const av = id => { const m = member(id); if (!m) return ''; return `<span class="av" style="background:${esc(m.color)}" title="${esc(m.name)}">${esc((m.name || '?')[0].toUpperCase())}</span>`; };
@@ -124,6 +130,12 @@ async function refresh() {
   S.entries = r[4].data || []; S.openEntry = (r[5].data || [])[0] || null;
   S.bills = (r[6] && r[6].data) || []; S.pay = (r[7] && r[7].data) || [];
   if (isOwner()) await loadEntries();
+  await loadExtras();
+}
+async function loadExtras() {
+  const m = await sb.from('messages').select('*').order('created_at', { ascending: false }).limit(400);
+  S.chatReady = !m.error; S.msgs = (m.data || []).slice().reverse();
+  if (isOwner()) { const x = await sb.from('subs').select('*').order('name'); S.subsReady = !x.error; S.subs = x.data || []; }
 }
 async function loadEntries() {
   const hw = parseYmd(S.hoursWeek);
@@ -205,11 +217,12 @@ function viewOnboard() {
 }
 function tabs() {
   const list = isOwner()
-    ? [['today', I.house('currentColor'), t('tToday')], ['schedule', I.cal, t('tSchedule')], ['bills', I.bill, t('tBills')], ['hours', I.clock, t('tHours')], ['clients', I.people, t('tClients')], ['me', I.me, t('tMe')]]
-    : [['today', I.house('currentColor'), t('tToday')], ['schedule', I.cal, t('tSchedule')], ['hours', I.clock, t('tHours')], ['me', I.me, t('tMe')]];
-  const rep = S.bills.filter(b => b.status === 'reported').length;
+    ? [['today', I.house('currentColor'), t('tToday')], ['schedule', I.cal, t('tSchedule')], ['bills', I.money, t('tMoney')], ['chat', I.chat, t('tChat')], ['crew', I.hat, t('tCrew')], ['clients', I.people, t('tClients')]]
+    : [['today', I.house('currentColor'), t('tToday')], ['schedule', I.cal, t('tSchedule')], ['chat', I.chat, t('tChat')], ['crew', I.hat, t('tCrew')]];
+  const rep = S.bills.filter(b => b.status === 'reported').length, cb = chatBadge();
+  const on = S.tab === 'hours' ? 'crew' : S.tab;
   return `<nav class="tabs" aria-label="Main"><div class="in2" style="--n:${list.length}">${list.map(([k, ic, l]) =>
-    `<button class="${S.tab === k ? 'on' : ''}" data-act="tab" data-v="${k}">${ic}${l}${k === 'bills' && rep ? `<span class="badge">${rep}</span>` : ''}</button>`).join('')}</div></nav>`;
+    `<button class="${on === k ? 'on' : ''}" data-act="tab" data-v="${k}">${ic}${l}${k === 'bills' && rep ? `<span class="badge">${rep}</span>` : ''}${k === 'chat' && cb ? `<span class="badge" style="background:#D93348">${cb}</span>` : ''}</button>`).join('')}</div></nav>`;
 }
 function jobCard(j, { showBill = false, showDate = false, clickable = false } = {}) {
   const c = client(j.client_id) || {};
@@ -235,8 +248,8 @@ function viewToday() {
   const mine = isOwner() ? S.todayJobs : S.todayJobs.filter(j => (j.crew || []).includes(S.me.user_id));
   const tt = totals();
   return `<div class="pad">
-  <div class="between"><div class="row" style="gap:8px"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true" style="flex-shrink:0"><path d="M16 2 L28 9 V23 L16 30 L4 23 V9 Z" fill="#0A0F1A"/><path d="M16 7 L23.5 11.3 V20.7 L16 25 L8.5 20.7 V11.3 Z" fill="#1F6FEB"/><path d="M13 12 V20 M19 12 V20 M13 16 H19" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg><div class="h" style="font-size:24px">CONTRACTOR <span class="pink">HUB</span></div></div>
-    <div aria-hidden="true" class="av" style="width:44px;height:44px;border-radius:22px;background:${esc(S.me.color)};font-size:18px">${esc((S.me.name || '?')[0].toUpperCase())}</div></div>
+  <div class="between"><div class="row" style="gap:8px"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true" style="flex-shrink:0"><path d="M16 2 L28 9 V23 L16 30 L4 23 V9 Z" fill="#0A0F1A"/><path d="M16 7 L23.5 11.3 V20.7 L16 25 L8.5 20.7 V11.3 Z" fill="#1F6FEB"/><path d="M13 12 V20 M19 12 V20 M13 16 H19" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg><div class="h" style="font-size:22px;white-space:nowrap">CONTRACTOR <span class="pink">HUB</span></div></div>
+    <div class="row" style="gap:8px"><button class="hdr-refresh" data-act="hardRefresh" aria-label="${t('refresh')}" title="${t('refresh')}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.5 10.5A7.6 7.6 0 0 0 6 7"/><path d="M5.2 3.6V7.6H9.2"/><path d="M4.5 13.5A7.6 7.6 0 0 0 18 17"/><path d="M18.8 20.4V16.4H14.8"/></svg></button><button class="av" data-act="tab" data-v="me" aria-label="${t('settings')}" title="${t('settings')}" style="width:44px;height:44px;border-radius:22px;background:${esc(S.me.color)};font-size:18px;border:3px solid var(--sun);cursor:pointer">${esc((S.me.name || '?')[0].toUpperCase())}</button></div></div>
   <div><h1 class="h" style="font-size:30px">${esc(t('hola', S.me.name))}</h1><p class="muted" style="margin:2px 0 0;font-size:16px">${mine.length ? t('jobsToday', mine.length) : t('noJobsToday')}</p></div>
   ${clockCard()}
   ${isOwner() ? `<button data-act="tab" data-v="bills" style="text-align:left;border:none;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);border-radius:20px;padding:20px;color:#fff;position:relative;overflow:hidden">${sparkle}
@@ -343,7 +356,7 @@ function viewPerf() {
   <div class="card col" style="gap:10px">${people.length ? people.map(p => `<div class="between">${'<span class="row" style="gap:8px">' + av(p.m.user_id) + '<b>' + esc(p.m.name) + '</b></span>'}<span class="small">${fmtHM(p.h)} · ${t('jobsN', p.n)} · <b>${esc(t('perJob', fmtHM(p.n ? p.h / p.n : 0)))}</b></span></div>`).join('') : `<div class="muted small">${t('noHours')}</div>`}</div>
   <p class="muted small" style="margin:0">${t('perfNote')}</p>`;
 }
-function viewHours() {
+function viewHours(embedded) {
   const ws = parseYmd(S.hoursWeek); const we = addDays(ws, 6);
   const people = isOwner() ? S.members.filter(m => m.active || S.entries.some(e => e.user_id === m.user_id)) : S.members.filter(m => m.user_id === S.me.user_id);
   const rows = people.map(m => { const es = S.entries.filter(e => e.user_id === m.user_id); const h = es.reduce((x, e) => x + entryHours(e), 0); return { m, es, h, rate: rateOf(m.user_id), pay: h * rateOf(m.user_id), open: es.some(e => !e.clock_out) }; });
@@ -351,8 +364,8 @@ function viewHours() {
   const entryRow = e => `<${isOwner() ? 'button' : 'div'} class="between" style="width:100%;border:none;background:none;padding:8px 0;border-top:1px solid var(--line);text-align:left;font-size:15px" ${isOwner() ? `data-act="editEntry" data-v="${e.id}"` : ''}>
       <span><b>${esc(fmtDate(new Date(e.clock_in)))}</b><br><span class="muted small">${esc(fmtClock(e.clock_in))} – ${e.clock_out ? esc(fmtClock(e.clock_out)) : t('now')}${e.edited ? ' · ' + t('edited') : ''}</span></span>
       <span style="font-weight:800${e.clock_out ? '' : ';color:#136C43'}">${fmtHM(entryHours(e))}</span></${isOwner() ? 'button' : 'div'}>`;
-  return `<div class="pad" style="gap:14px">
-  <div class="between"><h1 class="h" style="font-size:30px">${t('hours')}</h1>
+  return `<div class="${embedded ? 'col' : 'pad'}" style="gap:14px">
+  <div class="between"><h2 class="h" style="font-size:22px">${t('hours')}</h2>
     <div class="row" style="gap:4px"><button class="x" aria-label="Previous week" data-act="hoursWeek" data-v="-1">‹</button><button class="x" aria-label="Next week" data-act="hoursWeek" data-v="1">›</button></div></div>
   <div class="muted small" style="margin-top:-8px;font-weight:700">${esc(fmtDate(ws, { month: 'short', day: 'numeric' }))} – ${esc(fmtDate(we, { month: 'short', day: 'numeric' }))}</div>
   ${isOwner() ? `<div class="seg" role="group" style="align-self:flex-start"><button class="${S.hoursView === 'hours' ? 'on' : ''}" data-act="hoursView" data-v="hours">${t('tHours')}</button><button class="${S.hoursView === 'perf' ? 'on' : ''}" data-act="hoursView" data-v="perf">${t('tabPerf')}</button></div>` : ''}
@@ -397,16 +410,165 @@ function viewMe() {
     ${services().map(s => `<div class="between" style="font-size:15px"><span>${esc(s.label)}</span><b>${fmtPrice(s.amount)}</b></div>`).join('')}
     ${SQFT ? `<div class="muted small" style="border-top:2px dashed var(--line);padding-top:8px">${esc(t('sqftUsing', fmtPrice(sqftCfg().price), sqftCfg().base.toLocaleString('en-US')))}${sqftCfg().min ? ' · ' + t('minPrice').replace(/ \(.*\)/, '') + ' ' + fmtPrice(sqftCfg().min) : ''}</div>` : ''}
   </div>
-  <div class="card col" style="padding:16px">
+  ` : ''}
+  <button class="big ghost" data-act="signOut" style="font-size:17px">${t('signOut')}</button>
+</div>`;
+}
+function teamCard() {
+  const inviteBody = S.biz ? t('smsInvite', S.biz.name, appUrl(), S.biz.join_code) : '';
+  return `<div class="card col" style="padding:16px">
     <h2 class="h" style="font-size:20px">${t('team')}</h2>
     <div class="between"><span class="muted" style="font-weight:800">${t('joinCodeLbl')}</span><span class="h" style="font-size:30px;letter-spacing:.12em">${esc(S.biz.join_code)}</span></div>
     <a class="big sunbtn" style="font-size:17px" href="${esc(smsHref('', inviteBody))}">${I.send('#0A0F1A')}${t('inviteCrew')}</a>
     ${S.members.map(m => `<div class="row">${av(m.user_id)}<div class="grow"><div style="font-weight:800">${esc(m.name)}</div><div class="muted small">${m.role === 'owner' ? t('owner') : t('crewRole')}${m.phone ? ' · ' + esc(m.phone) : ''}</div></div>
       ${m.role === 'owner' ? '' : `<button class="switch ${m.active ? 'on' : ''}" role="switch" aria-checked="${m.active}" aria-label="${esc(m.name)} ${t('active')}" data-act="memberActive" data-v="${m.user_id}"><span></span></button>`}</div>`).join('')}
-  </div>` : ''}
-  <button class="big ghost" data-act="signOut" style="font-size:17px">${t('signOut')}</button>
+  </div>`;
+}
+
+// ---------- crew tab ----------
+function viewCrew() {
+  const subs = isOwner() && S.crewTab === 'subs';
+  return `<div class="pad" style="gap:14px">
+  <h1 class="h" style="font-size:30px">${t('crewH').toUpperCase()}</h1>
+  ${isOwner() ? `<div class="segw" role="group"><button class="${subs ? '' : 'on'}" data-act="crewTab" data-v="emp">${t('empTab')}</button><button class="${subs ? 'on' : ''}" data-act="crewTab" data-v="subs">${t('subTab')}</button></div>` : ''}
+  ${subs ? subsView() : `${clockCard()}${viewHours(true)}${isOwner() ? teamCard() : ''}`}
 </div>`;
 }
+const daysTo = d => d ? Math.round((parseYmd(d) - parseYmd(ymd(new Date()))) / 864e5) : null;
+const coiState = s => { const n = daysTo(s.coi_expires); return n === null ? 'none' : n < 0 ? 'exp' : n <= 30 ? 'soon' : 'ok'; };
+function subsView() {
+  if (!S.subsReady) return `<div class="card small" style="background:#FFF1C7;border-color:#F2D98A">${t('setupNeeded')}</div>`;
+  const owed = S.subs.reduce((x, s) => x + Number(s.owed || 0), 0), ytd = S.subs.reduce((x, s) => x + Number(s.paid_ytd || 0), 0), alerts = S.subs.filter(s => coiState(s) !== 'ok').length;
+  const dfmt = d => fmtDate(parseYmd(d), { month: 'short', day: 'numeric', year: 'numeric' });
+  const coi = s => { const k = coiState(s); return `<span class="chip ${k === 'ok' ? 'c-paid' : k === 'soon' || k === 'none' ? 'c-wait' : 'c-over'}" style="font-size:12px;padding:4px 9px">${k === 'ok' ? t('coiOk', dfmt(s.coi_expires)) : k === 'soon' ? t('coiSoon', dfmt(s.coi_expires)) : k === 'exp' ? t('coiExp', dfmt(s.coi_expires)) : t('coiNone')}</span>`; };
+  return `<div class="stats">
+    <div class="stat c-wait"><small>${t('subsOwed')}</small><b>${money0(owed)}</b></div>
+    <div class="stat c-rep"><small>${t('subsYtd')}</small><b>${money0(ytd)}</b></div>
+    <div class="stat ${alerts ? 'c-over' : 'c-paid'}"><small>${t('alerts')}</small><b>${alerts}</b></div></div>
+  <div class="col">${S.subs.length ? S.subs.map(s => `<div class="card col" style="gap:8px;${coiState(s) === 'exp' ? 'border:2px solid #E3A0A8' : ''}">
+    <button class="row" data-act="editSub" data-v="${s.id}" style="border:none;background:none;padding:0;text-align:left;width:100%">
+      <div class="ico" style="background:var(--ink);color:#fff;font-family:'Barlow Condensed';font-weight:800;font-size:18px">${esc((s.name || '?')[0].toUpperCase())}</div>
+      <div class="grow"><div style="font-weight:800">${esc(s.name)}</div><div class="muted small">${esc(s.trade || '')}${s.phone ? ' · ' + esc(s.phone) : ''}</div></div>
+      ${Number(s.owed) ? `<span class="h" style="font-size:20px">${money0(s.owed)}</span>` : ''}</button>
+    <div class="row" style="gap:6px;flex-wrap:wrap">${coi(s)}<span class="chip ${s.w9 ? 'c-paid' : 'c-over'}" style="font-size:12px;padding:4px 9px">${s.w9 ? t('w9ok') : t('w9no')}</span></div>
+    <div class="muted small">${esc(t('ytd', money0(s.paid_ytd)))}</div>
+    ${(Number(s.owed) || coiState(s) !== 'ok' || !s.w9) ? `<div class="row" style="gap:8px;flex-wrap:wrap">
+      ${Number(s.owed) ? `<button class="pill" style="background:var(--pink);border-color:var(--pink);color:#fff" data-act="paySub" data-v="${s.id}">${esc(t('paySub', money0(s.owed)))}</button>` : ''}
+      ${(coiState(s) !== 'ok' || !s.w9) && s.phone ? `<a class="pill" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)" href="${esc(smsHref(s.phone, t('smsReqDocs', S.biz.name, s.name)))}">${t('reqDocs')}</a>` : ''}
+    </div>` : ''}
+  </div>`).join('') : `<div class="card muted center" style="padding:22px">${t('noSubs')}</div>`}</div>
+  <button class="big pinkbtn" data-act="addSub">${I.plus('#fff')}${t('addSub')}</button>`;
+}
+function modalSub() {
+  const f = S.form;
+  return `<div class="between"><h2 class="h" style="font-size:24px">${f.id ? t('editSub') : t('addSub')}</h2><button class="x" data-act="closeModal" aria-label="${t('close')}">×</button></div>
+  <label class="f">${t('company')}<input class="in" data-bind="name" value="${esc(f.name || '')}" required></label>
+  <label class="f">${t('trade')}<input class="in" data-bind="trade" value="${esc(f.trade || '')}"></label>
+  <label class="f">${t('phone')}<input class="in" data-bind="phone" value="${esc(f.phone || '')}" inputmode="tel"></label>
+  <label class="f">${t('email')}<input class="in" data-bind="email" value="${esc(f.email || '')}" inputmode="email" autocapitalize="off"></label>
+  <label class="f">${t('coiDate')}<input class="in" type="date" data-bind="coi_expires" value="${esc(f.coi_expires || '')}"></label>
+  <div class="card row" style="padding:10px 14px"><div class="grow" style="font-weight:800">${t('w9Have')}</div><button class="switch ${f.w9 ? 'on' : ''}" role="switch" aria-checked="${!!f.w9}" aria-label="${t('w9Have')}" data-act="subW9"><span></span></button></div>
+  <label class="f">${t('owedAmt')}<input class="in" type="number" inputmode="decimal" min="0" step="0.01" data-bind="owed" value="${esc(f.owed || '')}"></label>
+  <label class="f">${t('notes')}<textarea class="in" rows="2" data-bind="notes">${esc(f.notes || '')}</textarea></label>
+  <button class="big pinkbtn" data-act="saveSub">${t('save')}</button>
+  ${f.id ? `<button class="big ghost" style="font-size:16px" data-act="deleteSub">${t('delete')}</button>` : ''}`;
+}
+
+// ---------- job chat ----------
+const BAD = /\b(f+u+c+k\w*|sh+i+t\w*|bitch\w*|ass(hole)?|bastard|dick|piss\w*|damn\w*|crap\w*|cunt|whore|slut|porn\w*|nude\w*)\b/i;
+const SEEN_KEY = 'chub-seen';
+const seen = () => { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); } catch (e) { return {}; } };
+const markSeen = k => { try { const x = seen(); x[k] = new Date().toISOString(); localStorage.setItem(SEEN_KEY, JSON.stringify(x)); } catch (e) {} };
+const thKey = m => m.client_id || 'team';
+const thName = k => k === 'team' ? t('wholeCrew') : ((client(k) || {}).name || '—');
+function chatBadge() {
+  if (!S.me) return 0; const sn = seen();
+  return S.msgs.filter(m => m.user_id !== S.me.user_id && (m.tags || []).includes(S.me.user_id) && m.created_at > (sn[thKey(m)] || '')).length + S.msgs.filter(m => m.flag_open).length;
+}
+const mName = id => (member(id) || {}).name || '—';
+const fmtTxt = s => esc(s).replace(/@([\wÀ-ÿ]+)/g, '<b style="color:var(--pink)">@$1</b>');
+function viewChat() {
+  if (!S.chatReady) return `<div class="pad"><h1 class="h" style="font-size:30px">${t('chatH').toUpperCase()}</h1><div class="card small" style="background:#FFF1C7;border-color:#F2D98A">${t('setupNeeded')}</div></div>`;
+  if (S.chat.open) return viewThread();
+  const fl = S.chat.tab === 'flagged', sn = seen();
+  const keys = ['team', ...new Set([...S.msgs.map(thKey).filter(k => k !== 'team').reverse(), ...S.todayJobs.map(j => j.client_id), ...S.jobs.map(j => j.client_id)].filter(k => k && client(k)))];
+  const flagged = S.msgs.filter(m => m.flag_open || m.resolved_by).sort((a, b) => (b.flag_open - a.flag_open) || (b.created_at > a.created_at ? 1 : -1));
+  const nFlag = S.msgs.filter(m => m.flag_open).length;
+  return `<div class="pad" style="gap:14px">
+  <h1 class="h" style="font-size:30px">${t('chatH').toUpperCase()}</h1>
+  <div class="segw" role="group"><button class="${fl ? '' : 'on'}" data-act="chatTab" data-v="threads">${t('threadsTab')}</button><button class="${fl ? 'on' : ''}" data-act="chatTab" data-v="flagged">🚩 ${t('flaggedTab')}${nFlag ? ` (${nFlag})` : ''}</button></div>
+  ${fl ? (flagged.length ? flagged.map(m => `<div class="card col" style="gap:8px;${m.flag_open ? 'border-left:4px solid #D93348;border-radius:0 14px 14px 0' : 'opacity:.75'}">
+      <div class="row" style="gap:10px">${av(m.user_id)}<div class="grow"><b>${esc(mName(m.user_id))}</b> <span class="muted small">· ${esc(thName(thKey(m)))} · ${esc(fmtDT(m.created_at))}</span></div></div>
+      ${m.body ? `<div>${fmtTxt(m.body)}</div>` : ''}${m.photo ? `<img src="${esc(m.photo)}" alt="" style="max-width:180px;border-radius:12px">` : ''}
+      <div class="between"><span class="chip ${m.flag_open ? 'c-over' : 'c-paid'}" style="font-size:12px;padding:4px 9px">${m.flag_open ? esc(t('flaggedBy', mName(m.flagged_by))) : esc(t('resolvedBy', mName(m.resolved_by)))}</span>
+      <span class="row" style="gap:6px">${m.flag_open ? `<button class="pill" style="min-height:38px;background:var(--ink);color:#fff;border-color:var(--ink)" data-act="msgMark" data-v="${m.id}" data-w="resolve">${t('resolve')}</button>` : ''}<button class="pill" style="min-height:38px" data-act="openThread" data-v="${thKey(m)}">${t('openChat')}</button></span></div></div>`).join('') : `<div class="card muted center" style="padding:22px">${t('noFlags')}</div>`)
+  : `<div class="col">${keys.map(k => { const ms = S.msgs.filter(m => thKey(m) === k); const last = ms[ms.length - 1]; const pin = ms.filter(m => m.pinned).pop();
+      const unread = ms.filter(m => m.user_id !== S.me.user_id && m.created_at > (sn[k] || '')).length; const f = ms.some(m => m.flag_open);
+      return `<button class="card row" data-act="openThread" data-v="${k}" style="align-items:flex-start">
+      <div class="ico" style="background:${k === 'team' ? 'var(--pink)' : 'var(--ink)'};color:#fff;font-family:'Barlow Condensed';font-weight:800;font-size:18px">${k === 'team' ? I.hat : esc(thName(k)[0])}</div>
+      <div class="grow" style="min-width:0"><div class="between"><b>${esc(thName(k))}</b><span class="muted small">${last ? esc(fmtDT(last.created_at)) : ''}</span></div>
+        <div class="muted small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${last ? esc(mName(last.user_id)) + ': ' + (last.photo ? '📷 ' : '') + esc(last.body) : t('noMsgs')}</div>
+        ${pin ? `<div class="small" style="margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📌 ${esc(pin.body)}</div>` : ''}</div>
+      <div class="col" style="gap:4px;align-items:flex-end">${unread ? `<span class="badge" style="position:static">${unread}</span>` : ''}${f ? '🚩' : ''}</div></button>`; }).join('')}</div>
+    ${S.clients.length ? `<label class="f">${t('chatAbout')}<select class="in" data-act-change="openThread"><option value="">—</option>${S.clients.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></label>` : ''}`}
+</div>`;
+}
+function viewThread() {
+  const k = S.chat.open, C = S.chat, ms = S.msgs.filter(m => thKey(m) === k), pins = ms.filter(m => m.pinned);
+  const c = k === 'team' ? null : client(k);
+  return `<div class="pad" style="gap:10px;padding-bottom:10px">
+  <div class="row" style="gap:6px"><button class="x" data-act="closeThread" aria-label="${t('back')}">‹</button><div class="grow"><div class="h" style="font-size:24px">${esc(thName(k))}</div>${c && c.address ? `<div class="muted small">${esc(c.address)}</div>` : ''}</div></div>
+  ${pins.length ? `<div class="card col" style="gap:4px;background:#EEF4FF;border-color:#C9DBF6;padding:10px 12px">${pins.map(m => `<div class="small">📌 <b>${esc(mName(m.user_id))}:</b> ${fmtTxt(m.body)}</div>`).join('')}</div>` : ''}
+  <div id="msgs" class="col" style="gap:12px">${ms.length ? ms.map(m => { const me = m.user_id === S.me.user_id;
+    return `<div style="display:flex;gap:8px;${me ? 'flex-direction:row-reverse' : ''};align-items:flex-end">${me ? '' : av(m.user_id)}
+      <div style="max-width:78%;display:flex;flex-direction:column;gap:3px;align-items:${me ? 'flex-end' : 'flex-start'}">
+        <div class="muted" style="font-size:12px;font-weight:700">${me ? '' : esc(mName(m.user_id)) + ' · '}${esc(fmtDT(m.created_at))}</div>
+        <div style="background:${me ? 'var(--pink)' : '#fff'};color:${me ? '#fff' : 'var(--ink)'};border:${me ? 'none' : '1px solid var(--line)'};border-radius:16px;${me ? 'border-bottom-right-radius:4px' : 'border-bottom-left-radius:4px'};padding:${m.photo ? '4px' : '9px 12px'};font-size:15px;${m.flag_open ? 'box-shadow:0 0 0 2px #D93348' : ''}">
+          ${m.photo ? `<img src="${esc(m.photo)}" alt="" style="display:block;width:210px;max-width:100%;border-radius:12px">` : ''}${m.body ? `<div style="${m.photo ? 'padding:6px 8px 4px' : ''};white-space:pre-wrap">${me ? esc(m.body).replace(/@([\wÀ-ÿ]+)/g, '<b>@$1</b>') : fmtTxt(m.body)}</div>` : ''}</div>
+        <div class="row" style="gap:6px;flex-wrap:wrap;${me ? 'justify-content:flex-end' : ''}">
+          ${m.pinned ? `<span class="chip c-rep" style="font-size:11px;padding:2px 7px">📌 ${t('pinnedLbl')}</span>` : ''}
+          ${m.flag_open ? `<span class="chip c-over" style="font-size:11px;padding:2px 7px">🚩 ${esc(t('flaggedBy', mName(m.flagged_by)))}</span>` : m.resolved_by ? `<span class="chip c-paid" style="font-size:11px;padding:2px 7px">✓ ${esc(t('resolvedBy', mName(m.resolved_by)))}</span>` : ''}
+          ${(m.tags || []).length ? `<span class="muted" style="font-size:11px;font-weight:700">${t('loopedIn')}: ${esc(m.tags.map(mName).join(', '))}</span>` : ''}
+          <button data-act="msgMenu" data-v="${m.id}" aria-label="More" style="border:none;background:none;font-weight:800;font-size:18px;min-width:36px;min-height:28px;color:#7C879B">⋯</button></div></div></div>`; }).join('') : `<div class="card muted center" style="padding:22px">${t('noMsgs')}</div>`}</div>
+  <div class="card col" style="gap:8px;padding:10px;position:sticky;bottom:calc(76px + env(safe-area-inset-bottom));z-index:5">
+    ${C.tags.length || C.photo ? `<div class="row" style="gap:6px;flex-wrap:wrap">${C.photo ? `<span class="chip c-rep" style="font-size:12px;padding:4px 9px">📷 ${t('photoOn')} <button data-act="dropPhoto" style="border:none;background:none;font-weight:800;padding:0 0 0 4px;color:inherit" aria-label="${t('close')}">✕</button></span>` : ''}${C.tags.map(id => `<span class="chip" style="background:var(--ink);color:#fff;font-size:12px;padding:4px 9px">@${esc(mName(id))} <button data-act="tag" data-v="${id}" style="border:none;background:none;color:#fff;font-weight:800;padding:0 0 0 4px" aria-label="${t('close')}">✕</button></span>`).join('')}</div>` : ''}
+    <div class="row" style="gap:6px">
+      <label aria-label="${t('addPhoto')}" style="width:44px;height:44px;border-radius:12px;border:2px solid var(--line2);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;background:${C.photo ? '#EEF4FF' : '#fff'}">${I.camera}<input type="file" accept="image/*" data-photo style="display:none"></label>
+      <button data-act="tagOpen" aria-label="@" style="width:44px;height:44px;border-radius:12px;border:2px solid var(--line2);background:#fff;font-weight:800;font-size:20px;flex-shrink:0">@</button>
+      <input class="in" id="msgIn" style="min-height:44px;flex:1;min-width:0" placeholder="${t('msgPh')}" value="${esc(C.draft)}" autocomplete="off">
+      <button data-act="sendMsg" aria-label="${t('send')}" style="width:44px;height:44px;border-radius:22px;border:none;background:var(--pink);flex-shrink:0;display:flex;align-items:center;justify-content:center">${I.send('#fff')}</button></div>
+    <div class="muted" style="font-size:11px;text-align:center">🛡 ${t('cleanNote')}</div>
+  </div>
+</div>`;
+}
+function modalTag() {
+  return `<div class="between"><h2 class="h" style="font-size:24px">${t('loopWho').toUpperCase()}</h2><button class="x" data-act="closeModal" aria-label="${t('close')}">×</button></div>
+  ${activeMembers().filter(m => m.user_id !== S.me.user_id).map(m => `<button class="opt ${S.chat.tags.includes(m.user_id) ? 'on' : ''}" data-act="tag" data-v="${m.user_id}" aria-pressed="${S.chat.tags.includes(m.user_id)}">${av(m.user_id)}<span style="flex:1;font-weight:800">${esc(m.name)}</span><span class="muted small">${m.role === 'owner' ? t('owner') : t('crewRole')}</span></button>`).join('') || `<div class="muted">${t('noCrewYet')}</div>`}
+  <button class="big pinkbtn" data-act="closeModal">${t('close')}</button>`;
+}
+function modalMsg() {
+  const m = S.msgs.find(x => x.id === S.form.msg); if (!m) return '';
+  const canDel = m.user_id === S.me.user_id || isOwner();
+  return `<div class="muted" style="font-size:14px"><b>${esc(mName(m.user_id))}:</b> ${esc(m.body)}</div>
+  <button class="big ghost" data-act="msgMark" data-v="${m.id}" data-w="pin">${m.pinned ? t('unpin') : t('pinIt')}</button>
+  <button class="big ${m.flag_open ? 'tealbtn' : 'ghost'}" data-act="msgMark" data-v="${m.id}" data-w="${m.flag_open ? 'resolve' : 'flag'}">${m.flag_open ? t('resolve') : t('flagIt')}</button>
+  ${canDel ? `<button class="big ghost" style="font-size:16px;color:#A3152A;border-color:#E3A0A8" data-act="delMsg" data-v="${m.id}">${t('delMsg')}</button>` : ''}
+  <button class="big ghost" style="font-size:16px" data-act="closeModal">${t('close')}</button>`;
+}
+function shrinkPhoto(file) {
+  return new Promise((res, rej) => { const img = new Image(); const url = URL.createObjectURL(file);
+    img.onload = () => { const tryAt = (max, q) => { const sc = Math.min(1, max / Math.max(img.width, img.height)); const cv = document.createElement('canvas'); cv.width = Math.round(img.width * sc); cv.height = Math.round(img.height * sc);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); return cv.toDataURL('image/jpeg', q); };
+      let d = tryAt(1100, 0.72); if (d.length > 440000) d = tryAt(900, 0.6); if (d.length > 440000) d = tryAt(700, 0.5); URL.revokeObjectURL(url); d.length > 440000 ? rej(new Error('big')) : res(d); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('bad')); }; img.src = url; });
+}
+async function reloadMsgs() {
+  const m = await sb.from('messages').select('*').order('created_at', { ascending: false }).limit(400);
+  if (m.error) return false; const next = (m.data || []).slice().reverse();
+  const changed = JSON.stringify(next.map(x => [x.id, x.pinned, x.flag_open, x.resolved_by])) !== JSON.stringify(S.msgs.map(x => [x.id, x.pinned, x.flag_open, x.resolved_by]));
+  S.msgs = next; return changed;
+}
+const scrollMsgs = () => { const el = document.getElementById('msgs'); if (el) el.lastElementChild && el.lastElementChild.scrollIntoView({ block: 'end' }); };
 
 // ---------- modals ----------
 function modalJob() {
@@ -575,7 +737,7 @@ function modalRate() {
   <button class="big pinkbtn" data-act="saveRate">${t('save')}</button>
   <button class="link" data-act="closeModal">${t('cancel')}</button>`;
 }
-const MODALS = { entry: modalEntry, rate: modalRate, prices: modalPrices, job: modalJob, bill: modalBill, sent: modalSent, billDetail: modalBillDetail, client: modalClient, newpass: modalNewPass };
+const MODALS = { sub: modalSub, tag: modalTag, msg: modalMsg, entry: modalEntry, rate: modalRate, prices: modalPrices, job: modalJob, bill: modalBill, sent: modalSent, billDetail: modalBillDetail, client: modalClient, newpass: modalNewPass };
 
 // ---------- render ----------
 function render() {
@@ -588,8 +750,8 @@ function render() {
   if (S.loading) html = `<div class="spinner" role="status" aria-label="${t('loading')}"></div>`;
   else if (!S.session) html = viewAuth();
   else if (!S.me) html = viewOnboard();
-  else html = ({ today: viewToday, schedule: viewSchedule, bills: viewBills, hours: viewHours, clients: viewClients, me: viewMe }[S.tab] || viewToday)() + tabs();
-  if (S.me && !S.loading) html += `<button class="fab-refresh" data-act="hardRefresh" aria-label="${t('refresh')}" title="${t('refresh')}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12 A8 8 0 1 1 17.7 6.3"/><path d="M20 4 V9 H15"/></svg></button>`;
+  else html = ({ today: viewToday, schedule: viewSchedule, bills: viewBills, hours: viewCrew, crew: viewCrew, chat: viewChat, clients: viewClients, me: viewMe }[S.tab] || viewToday)() + tabs();
+  // refresh button lives in the Today header
   if (S.modal && MODALS[S.modal.type]) html += `<div class="overlay" data-act="overlay"><div class="sheet" role="dialog" aria-modal="true">${MODALS[S.modal.type]()}</div></div>`;
   if (S.toast) html += `<div class="toast" role="status">${esc(S.toast)}</div>`;
   app.innerHTML = `<div class="wrap">${html}</div>`;
@@ -785,6 +947,39 @@ async function act(a, el) {
       const rows = [['Name', 'Date', 'Clock in', 'Clock out', 'Hours', 'Rate', 'Pay', 'Edited', 'Note']].concat(S.entries.map(e => { const m = member(e.user_id) || {}; const h = entryHours(e); return [m.name || '', ymd(new Date(e.clock_in)), fmtClock(e.clock_in), e.clock_out ? fmtClock(e.clock_out) : '', h.toFixed(2), rateOf(e.user_id).toFixed(2), (h * rateOf(e.user_id)).toFixed(2), e.edited ? 'yes' : '', e.note || '']; }));
       await exportCsv(`contractor-hub-hours-${ymd(ws)}.csv`, rows); return;
     }
+    case 'crewTab': S.crewTab = v; break;
+    case 'addSub': S.form = { w9: false }; S.modal = { type: 'sub' }; break;
+    case 'editSub': { const x = S.subs.find(y => y.id === v); S.form = Object.assign({}, x); S.modal = { type: 'sub' }; break; }
+    case 'subW9': S.form.w9 = !S.form.w9; break;
+    case 'saveSub': {
+      const f = S.form; if (!String(f.name || '').trim()) { toast(t('company') + '?'); return; }
+      const row = { business_id: S.me.business_id, name: String(f.name).trim(), trade: f.trade || '', phone: f.phone || '', email: f.email || '', coi_expires: f.coi_expires || null, w9: !!f.w9, owed: Math.max(0, Number(f.owed) || 0), notes: f.notes || '' };
+      const { error } = f.id ? await sb.from('subs').update(row).eq('id', f.id) : await sb.from('subs').insert(row);
+      if (error) { toast(t('errGeneric')); return; } S.modal = null; await loadExtras(); toast(t('saved')); break;
+    }
+    case 'deleteSub': { if (!window.confirm(t('confirmDelete'))) return; await sb.from('subs').delete().eq('id', S.form.id); S.modal = null; await loadExtras(); break; }
+    case 'paySub': { const x = S.subs.find(y => y.id === v); const amt = Number(x.owed || 0);
+      const { error } = await sb.from('subs').update({ owed: 0, paid_ytd: Number(x.paid_ytd || 0) + amt }).eq('id', v);
+      if (error) { toast(t('errGeneric')); return; } await loadExtras(); toast(t('paidSubT', money0(amt), x.name)); break; }
+    case 'chatTab': S.chat.tab = v; break;
+    case 'openThread': if (!v) return; S.chat.open = v; S.chat.draft = ''; S.chat.tags = []; S.chat.photo = null; markSeen(v); S.tab = 'chat'; render(); scrollMsgs(); return;
+    case 'closeThread': if (S.chat.open) markSeen(S.chat.open); S.chat.open = null; break;
+    case 'tagOpen': S.chat.draft = (document.getElementById('msgIn') || {}).value || S.chat.draft; S.modal = { type: 'tag' }; break;
+    case 'tag': { const C = S.chat; C.draft = (document.getElementById('msgIn') || {}).value ?? C.draft; C.tags = C.tags.includes(v) ? C.tags.filter(x => x !== v) : [...C.tags, v]; break; }
+    case 'dropPhoto': S.chat.draft = (document.getElementById('msgIn') || {}).value || S.chat.draft; S.chat.photo = null; break;
+    case 'msgMenu': S.form = { msg: v }; S.modal = { type: 'msg' }; break;
+    case 'msgMark': { const { error } = await sb.rpc('msg_mark', { p_id: v, p_what: el.dataset.w }); if (error) { toast(t('errGeneric')); return; } S.modal = null; await reloadMsgs(); break; }
+    case 'delMsg': { if (!window.confirm(t('confirmDelete'))) return; const { error } = await sb.from('messages').delete().eq('id', v); if (error) { toast(t('errGeneric')); return; } S.modal = null; await reloadMsgs(); break; }
+    case 'sendMsg': {
+      const C = S.chat, raw = ((document.getElementById('msgIn') || {}).value || '').trim();
+      if (!raw && !C.photo) return;
+      if (BAD.test(raw)) { C.draft = raw; toast(t('cleanMsg')); return; }
+      let body = raw; C.tags.forEach(id => { const n = mName(id).split(' ')[0]; if (!body.toLowerCase().includes('@' + n.toLowerCase())) body = '@' + n + ' ' + body; });
+      const row = { business_id: S.me.business_id, client_id: C.open === 'team' ? null : C.open, user_id: S.me.user_id, body: body.slice(0, 2000), photo: C.photo, tags: C.tags };
+      const { error } = await sb.from('messages').insert(row);
+      if (error) { C.draft = raw; toast(t('errGeneric')); return; }
+      C.draft = ''; C.tags = []; C.photo = null; await reloadMsgs(); markSeen(C.open); render(); scrollMsgs(); return;
+    }
     default: return;
   }
   render();
@@ -846,9 +1041,21 @@ function onInput(e) {
   } else if (el.dataset.actInput === 'search') { S.q = el.value; render(); }
 }
 document.addEventListener('input', onInput);
-document.addEventListener('change', e => { if (e.target.tagName === 'SELECT') onInput(e); });
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.matches && el.matches('input[data-photo]') && el.files && el.files[0]) {
+    S.chat.draft = (document.getElementById('msgIn') || {}).value || S.chat.draft;
+    shrinkPhoto(el.files[0]).then(d => { S.chat.photo = d; render(); }).catch(() => toast(t('photoBig'))); return;
+  }
+  if (el.dataset && el.dataset.actChange === 'openThread') { act('openThread', { dataset: { v: el.value } }); return; }
+  if (el.tagName === 'SELECT') onInput(e);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'msgIn') { e.preventDefault(); act('sendMsg', e.target).catch(() => toast(t('errGeneric'))); } });
+setInterval(async () => { if (!S.me || S.tab !== 'chat' || document.visibilityState !== 'visible' || S.modal) return;
+  const typing = document.activeElement && document.activeElement.id === 'msgIn'; if (typing) S.chat.draft = document.activeElement.value;
+  if (await reloadMsgs()) { if (S.chat.open) markSeen(S.chat.open); render(); if (S.chat.open) scrollMsgs(); } }, 12000);
 
-const APP_VERSION = '15';
+const APP_VERSION = '2';
 async function checkVersion() {
   if (window.CHUB_DEMO) return;
   try {

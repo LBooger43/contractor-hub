@@ -461,6 +461,10 @@ function today(t){
   <button class="big blackbtn" data-act="newEst" data-v="today">${icon.ruler('#FFD54A')}${t.estimate.toUpperCase()}</button>
 </div>${tabs(t,'today')}`}
 
+const calLink=(j,d)=>{const m=j.t.match(/(\d+):(\d+)\s*(AM|PM)/);let h=+m[1]%12+(m[3]==='PM'?12:0),mi=+m[2];const p2=n=>String(n).padStart(2,'0');
+  const st=new Date(2026,10,d,h,mi),en=new Date(st.getTime()+(j.h||1)*36e5),fmt=x=>`${x.getFullYear()}${p2(x.getMonth()+1)}${p2(x.getDate())}T${p2(x.getHours())}${p2(x.getMinutes())}00`;
+  const q=new URLSearchParams({action:'TEMPLATE',text:`Job: ${j.c} — ${j.j||''}`,dates:fmt(st)+'/'+fmt(en),details:`Crew: ${j.crew.map(id=>crewOf(id).n).join(', ')}`,location:j.a+', NC',ctz:'America/New_York'});
+  return `<a href="https://calendar.google.com/calendar/render?${q}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:6px 11px;border-radius:999px;border:1.5px solid var(--line2);background:#fff;color:var(--ink);font-weight:800;font-size:13px;text-decoration:none;white-space:nowrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10 H21 M8 3 V7 M16 3 V7"/></svg>${lang==='es'?'Agregar al calendario':'Add to calendar'}</a>`};
 function schedule(t){
   const days=[15,16,17,18,19,20];
   const hours={}; CREW.forEach(c=>hours[c.id]=0);
@@ -478,7 +482,7 @@ function schedule(t){
     ${jobs.length?jobs.map(j=>`<div class="card row" style="align-items:flex-start;border-left:4px solid var(--blue)">
       <div style="width:58px;flex-shrink:0"><div class="h" style="font-size:19px">${j.t.split(' ')[0]}</div><div class="muted" style="font-size:12px;font-weight:800">${j.t.split(' ')[1]}</div></div>
       <div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px">${j.c}</div><div style="font-size:14px;font-weight:600">${j.j}</div><div class="muted" style="font-size:13px">${j.a} · ${t.hours(j.h)}</div>
-        <div class="row" style="gap:8px;margin-top:8px"><span class="stack" style="display:flex">${j.crew.map(av).join('')}</span><span style="font-size:13px;font-weight:700">${j.crew.map(id=>crewOf(id).n).join(' + ')}</span></div>${j.rep?`<span class="chip" style="display:inline-block;margin-top:8px;margin-right:6px;font-size:12px;padding:4px 9px;background:#E3F1D6;color:#2F5212">↻ ${j.rep==='w'?t.repW:t.repB}</span>`:''}${j.sub?`<span class="chip c-est" style="display:inline-block;margin-top:8px;font-size:12px;padding:4px 9px">${t.subLbl}: ${j.sub}</span>`:''}</div>
+        <div class="row" style="gap:8px;margin-top:8px"><span class="stack" style="display:flex">${j.crew.map(av).join('')}</span><span style="font-size:13px;font-weight:700">${j.crew.map(id=>crewOf(id).n).join(' + ')}</span></div>${calLink(j,S.day)}<br>${j.rep?`<span class="chip" style="display:inline-block;margin-top:8px;margin-right:6px;font-size:12px;padding:4px 9px;background:#E3F1D6;color:#2F5212">↻ ${j.rep==='w'?t.repW:t.repB}</span>`:''}${j.sub?`<span class="chip c-est" style="display:inline-block;margin-top:8px;font-size:12px;padding:4px 9px">${t.subLbl}: ${j.sub}</span>`:''}</div>
     </div>`).join(''):`<div class="card muted" style="text-align:center;padding:24px">${t.noJobs}</div>`}
   </div>
   <button class="big blackbtn" style="font-size:19px;height:54px;margin-top:4px" data-act="toast" data-v="textedCrew">${icon.send('#fff')}${t.textCrew}</button>

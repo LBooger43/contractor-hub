@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yard Hub Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#111111;--navy:#161616;--navy2:#2B2B2B;--blue:#FFC20E;--blueD:#8A6500;--sky:#FFD54A;--ice:#FFF5D1;--bg:#FAF8F2;--line:#E4E1D8;--line2:#D3CFC2;--muted:#5A5850}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#E8E5DC;font-family:'Barlow',sans-serif;color:var(--ink)}
+  button{font-family:inherit;color:inherit;cursor:pointer}
+  .bar{max-width:390px;margin:0 auto;padding:10px 14px;display:flex;align-items:center;gap:10px;background:var(--ink);color:#fff}
+  .bar b{font-family:'Barlow Condensed',sans-serif;font-size:19px;flex:1;letter-spacing:.02em}
+  .seg{display:flex;background:#2A2A2A;border-radius:999px;padding:3px}
+  .seg button{border:none;background:none;color:#fff;font-weight:800;font-size:13px;padding:6px 12px;border-radius:999px;min-height:32px}
+  .seg button.on{background:var(--blue);color:#111111}
+  .restart{width:40px;height:40px;border-radius:20px;border:none;background:#fff;color:#111;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .hint{max-width:390px;margin:0 auto;background:var(--sky);padding:9px 16px;font-weight:700;font-size:14px;display:flex;gap:8px;align-items:center}
+  .hint .who{background:var(--ink);color:#fff;border-radius:999px;font-size:11px;padding:3px 8px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  .phone{max-width:390px;min-height:760px;margin:0 auto 30px;background:var(--bg);position:relative;overflow:hidden;display:flex;flex-direction:column}
+  @media (min-width:500px){.bar{margin-top:20px;border-radius:20px 20px 0 0}.phone{border-radius:0 0 32px 32px;box-shadow:0 20px 50px rgba(10,15,26,.25)}}
+  .pad{padding:20px;display:flex;flex-direction:column;gap:16px;flex:1}
+  .h{font-family:'Barlow Condensed',sans-serif;font-weight:800;margin:0;line-height:1.05;letter-spacing:.01em}
+  .muted{color:var(--muted)}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+  button.card{width:100%;text-align:left;font-size:inherit}
+  .row{display:flex;align-items:center;gap:12px}
+  .between{display:flex;justify-content:space-between;align-items:center}
+  .chip{font-size:13px;font-weight:800;padding:6px 10px;border-radius:999px;white-space:nowrap}
+  .c-paid{background:#DCF3E6;color:#11643C}.c-wait{background:#FFF0C9;color:#7A4F00}.c-over{background:#FDE2E4;color:#A3152A}.c-est{background:var(--ice);color:var(--blueD)}
+  .ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .big{height:58px;border-radius:14px;border:none;width:100%;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:21px;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:10px}
+  .bluebtn{background:var(--blue);color:#111111;box-shadow:0 4px 0 var(--blueD)}
+  .blackbtn{background:var(--ink);color:#fff;box-shadow:0 4px 0 #000}
+  .ghost{background:#fff;border:2px solid var(--ink);font-size:17px;height:52px}
+  .pulse{animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+  .tabs{display:grid;grid-template-columns:repeat(6,1fr);background:var(--ink);padding:8px 8px 18px;margin-top:auto}
+  .tabs button{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:48px;font-size:12px;font-weight:700;color:#A8A390;position:relative}
+  .tabs button.on{color:var(--sky);font-weight:800}
+  .badge{position:absolute;top:0;right:22%;background:var(--blue);color:#111111;font-size:10px;font-weight:800;border-radius:999px;padding:1px 6px}
+  .opt{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border-radius:14px;background:#fff;border:2px solid var(--line);text-align:left}
+  .opt.on{background:var(--ice);border-color:var(--blue)}
+  .dot{width:20px;height:20px;border-radius:10px;border:2px solid #AAA592;flex-shrink:0}
+  .opt.on .dot{border:6px solid var(--blue)}
+  .mat{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:12px;background:#fff;border:2px solid var(--line);text-align:left;min-height:52px}
+  .mat.on{border-color:var(--navy)}
+  .box{width:22px;height:22px;border-radius:6px;border:2px solid #AAA592;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .mat.on .box{background:var(--navy);border-color:var(--navy)}
+  .pill{min-height:44px;padding:0 14px;border-radius:999px;font-weight:800;font-size:14px;background:#fff;border:2px solid var(--line2)}
+  .pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .switch{width:56px;height:32px;border-radius:16px;border:none;padding:3px;display:flex;background:#CEC8B6;flex-shrink:0}
+  .switch.on{background:var(--blue);justify-content:flex-end}
+  .switch span{width:26px;height:26px;border-radius:13px;background:#fff;display:block}
+  .stepper{display:flex;align-items:center;border:2px solid var(--line2);border-radius:12px;overflow:hidden;background:#fff}
+  .stepper button{width:44px;height:44px;border:none;background:#fff;font-size:22px;font-weight:800}
+  .stepper b{min-width:44px;text-align:center;font-family:'Barlow Condensed';font-size:22px}
+  textarea{font-family:inherit;font-size:15px;color:var(--ink);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;resize:none;width:100%}
+  .foot{background:#fff;border-top:1px solid var(--line);padding:14px 20px 22px;display:flex;align-items:center;gap:14px}
+  .sheetWrap{position:absolute;inset:0;background:rgba(10,15,26,.6);display:flex;align-items:flex-end}
+  .sheet{width:100%;background:var(--bg);border-radius:24px 24px 0 0;padding:28px 24px 32px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;position:relative;overflow:hidden}
+  .link{background:none;border:none;color:#8A6500;font-weight:800;font-size:15px;padding:10px;min-height:44px}
+  .line{display:flex;justify-content:space-between;font-size:15px;gap:10px}
+  .conf{position:absolute;display:block;pointer-events:none}
+  .days{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+  .day{min-height:58px;border-radius:12px;border:2px solid var(--line2);background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .day small{font-size:12px;font-weight:700}.day b{font-family:'Barlow Condensed',sans-serif;font-size:22px;line-height:1}
+  .day.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .scroller{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin:0 -20px;padding-left:20px;padding-right:20px}
+  .crew{min-height:44px;border-radius:999px;border:2px solid var(--line2);background:#fff;padding:0 12px 0 6px;display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;white-space:nowrap}
+  .crew.on{border-color:var(--ink);background:var(--ice)}
+  .av{width:30px;height:30px;border-radius:15px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;display:inline-flex;align-items:center;justify-content:center;border:2px solid #fff;flex-shrink:0}
+  .stack .av{margin-left:-8px}.stack .av:first-child{margin-left:0}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .stat{border-radius:14px;padding:10px 12px}
+  .stat small{display:block;font-size:12px;font-weight:800}.stat b{display:block;font-family:'Barlow Condensed',sans-serif;font-size:24px;line-height:1.1}
+  .step{display:flex;gap:12px;min-height:54px}
+  .step .rail{display:flex;flex-direction:column;align-items:center;width:24px}
+  .step .bead{width:24px;height:24px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .step .stem{flex:1;width:3px;background:var(--line2)}
+  .toast{position:absolute;left:20px;right:20px;bottom:96px;background:var(--blue);color:#111111;border-radius:12px;padding:12px 14px;font-weight:800;font-size:14px;text-align:center;z-index:5}
+  .photos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .photo{border-radius:12px;overflow:hidden;position:relative;aspect-ratio:4/3}
+  .photo span{position:absolute;left:8px;top:8px;background:rgba(10,15,26,.8);color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+  .timer{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-variant-numeric:tabular-nums}
+  .live{width:10px;height:10px;border-radius:5px;background:#22C55E;box-shadow:0 0 0 4px rgba(34,197,94,.25);flex-shrink:0}
+  .off{width:10px;height:10px;border-radius:5px;background:#AAA592;flex-shrink:0}
+  .segw{display:grid;grid-template-columns:1fr 1fr;background:#ECE8DC;border-radius:12px;padding:4px}
+  .segw button{border:none;background:none;min-height:44px;border-radius:9px;font-weight:800;font-size:15px}
+  .segw button.on{background:var(--ink);color:#fff}
+  .fld{width:100%;min-height:48px;border:1px solid var(--line2);border-radius:12px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--ink);background:#fff}
+  .scan{position:absolute;left:0;right:0;height:4px;background:var(--sky);box-shadow:0 0 14px 4px rgba(124,192,255,.8);animation:scan 1.4s ease-in-out infinite}
+  @keyframes scan{0%{top:0}50%{top:calc(100% - 4px)}100%{top:0}}
+  .tag{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="bar">
+  <b>YARD HUB DEMO</b>
+  <div class="seg" role="group" aria-label="Language">
+    <button data-act="lang" data-v="en" id="len">EN</button>
+    <button data-act="lang" data-v="es" id="les">ES</button>
+  </div>
+  <button class="restart" data-act="restart" id="restartBtn" aria-label="Refresh" title="Refresh"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.5 10.5A7.6 7.6 0 0 0 6 7"/><path d="M5.2 3.6V7.6H9.2"/><path d="M4.5 13.5A7.6 7.6 0 0 0 18 17"/><path d="M18.8 20.4V16.4H14.8"/></svg></button>
+</div>
+<div class="hint" id="hint" aria-live="polite"></div>
+<main class="phone" id="app"></main>
+
+<script>
+const T = {
+  en: {
+    restart:'Refresh', pro:'Landscaper', customer:'Customer', office:'Office',
+    hint_today:'You are the landscaper. Tap “Send invoice” on The Hendersons.',
+    hint_todayDone:'Now tap “Money” at the bottom to see it tracked.',
+    hint_bill:'Set the hours and materials, then tap “Text the invoice”.',
+    hint_sent:'Invoice sent! Tap “See what they see” to be the customer.',
+    hint_client:'Now you are the homeowner. Check the photos and pay.',
+    hint_clientPaid:'Paid! Tap “See Marcus’s side”.',
+    hint_paid:'Marcus gets paid. Tap “Back to today”.',
+    hint_schedule:'Tap a day, or tap a crew member to see only their jobs.',
+    hint_bills:'Estimates and invoices, tracked to paid. Tap one.',
+    hint_billDetail:'The full history of this job — estimate to paid.',
+    hint_clients:'Homeowners and landlords, and what they owe.',
+    hint_signup:'This is what a new customer sees when they open the invite link.', hint_signupDone:'Done! Tap “See it in Clients”.',
+    hey:'Morning, Marcus.', jobsToday:'3 jobs on the board today.', week:'Collected this week', nPaid:n=>`${n} paid`, nWait:n=>`${n} waiting`,
+    today:'Today', seeAll:'See all', done:'Job done', sendBill:'Send invoice', upNext:'Up next', billSent:'Invoice sent', opened:'Opened',
+    job1:'Weekly mow + edge', job2:'Mulch beds + shrub trim', job3:'Leaf cleanup, units A–C', sendABill:'Send an invoice',
+    tToday:'Today', tSched:'Schedule', tBills:'Money', tClients:'Clients',
+    newBill:'New invoice', billTo:'Invoice to', change:'Change', jobLbl:'Job', jobName:'Fresh mulch, bed edging + shrub trim',
+    labor:'Labor', hoursAt:r=>`hours × $${r}/hr`, materials:'Materials', tapToggle:'tap to remove',
+    heater:'Hardwood mulch, 8 cu yd', tank:'Steel bed edging, 40 ft', fittings:'Pre-emergent weed control', haul:'Debris haul-off',
+    photos:'Job photos', before:'Before', after:'After', addPhotos:'Attach before/after photos', addPhotosD:'Customers pay faster when they see the work',
+    deposit:'Deposit already paid', note:'Note to customer',
+    noteText:'Beds are mulched, edged and weeded. Water the new shrubs twice a week for the first month.',
+    jobTotal:'Job total', due:'Amount due', textBill:'Text the invoice',
+    sent:'Sent!', sentMsg:(t,n)=>`${n} got a text with a pay link for <strong>${t}</strong>. You’ll know the second they pay.`,
+    stProg:'In progress', ev_partial:'Partial payment received', ev_progress:'Payment received', contract:'Contract total', paidSoFar:'Paid so far', balance:'Balance', paySched:'Payment schedule',
+    ms_dep:'Deposit — to start', ms_frame:'Week 2 — patio base + pavers', ms_roof:'Week 3 — wall + lighting', ms_final:'Final — plantings + sod',
+    msPaid:d=>`Paid ${d}`, msPartial:(p,a)=>`${p} of ${a} paid`, msReady:'Ready to bill', msLater:'Not yet', msSent:'Invoice sent — waiting',
+    sendMs:a=>`Send ${a} invoice`, msTexted:(a,n)=>`Invoice for ${a} texted to ${n}`, remindRest:a=>`Remind about ${a}`, recordPay:a=>`Record check/cash for ${a}`, recorded:a=>`${a} payment recorded`, ofTotal:a=>`of ${a}`, balLeft:a=>`${a} left`,
+    hint_progress:'A 4-week job billed in stages. Bill the next stage when that work is done.',
+    estimate:'Estimate a job', newEst:'New estimate', estH:'Estimator', whatBuild:'What’s the job?', pt_deck:'Lawn mowing', pt_drywall:'Mulch beds', pt_paint:'Sod install', pt_fence:'Leaf cleanup',
+    fromPhoto:'Start from a photo', fromPhotoD:'Snap the yard — AI takes a first guess at size and scope', demoPhotos:'The demo uses sample photos. The real app reads your own photo.',
+    ph_deck:'Front lawn', ph_wall:'Flower beds', ph_fence:'Leafy yard', reading:'Reading photo…', aiGuess:'AI guess from photo — double-check your measurements',
+    dims:'Measurements', d_Ldeck:'Length along house (ft)', d_Wdeck:'Depth out from house (ft)', d_L:'Room length (ft)', d_W:'Room width (ft)', d_H:'Ceiling height (ft)', d_coats:'Coats', d_len:'Fence length (ft)', d_fh:'Height', d_gates:'Gates',
+    o_rail:'Add railing', o_ceil:'Include ceiling', matList:'Materials', matSub:'Materials subtotal', markup:'Markup on materials', laborEst:h=>`Labor · ${h} hrs × $${RATE}`, estTotal:'Estimate total', customer:'Customer',
+    sendEst:'Text estimate to customer', estSent:n=>`Estimate texted to ${n}`, copyMats:'Copy shopping list', copiedMats:'Shopping list copied! Paste it into a text or note.', priceNote:'Sample prices. In the real app you set your own price list.',
+    hint_estimator:'Pick a project and type the measurements — or start from a photo.', sqft:a=>`${a} sq ft`, lft:a=>`${a} linear ft`,
+    repW:'Every week', repB:'Every 2 weeks', perVisit:(h,p)=>`About ${h} hrs per visit · ${p} labor per visit`,
+    d_lawn:'Lawn size (sq ft)', d_visits:'Visits per month', d_bed:'Bed area (sq ft)', d_depth:'Mulch depth (inches)', d_sL:'Length (ft)', d_sW:'Width (ft)', d_yard:'Yard size (sq ft)',
+    o_edge:'Edge, trim + blow every visit', o_fabric:'Add weed fabric', o_prep:'Till + topsoil first', o_heavy:'Heavy leaves (lots of trees)',
+    m_fuel:'Fuel + blade upkeep, per visit', m_line:'Trimmer line', m_mulch:d=>`Hardwood mulch, cu yd (${d}″ deep)`, m_deliv:'Mulch delivery', m_preem:'Pre-emergent, bag', m_fabric:'Weed fabric, 300 sq ft roll',
+    m_sod:'Sod, pallet (450 sq ft)', m_starter:'Starter fertilizer, bag', m_topsoil:'Topsoil, cu yd', m_bagbox:'Leaf bags, box of 20', m_dump:'Dump fee',
+    m_joist:l=>`2×8×${l}′ PT joists`, m_rim:'2×8×16′ PT rim boards', m_beam:'2×10×16′ PT beam boards', m_post:'6×6×10′ PT posts', m_deck:'5/4×6×16′ deck boards', m_hanger:'Joist hangers', m_dscrew:'Deck screws, 5 lb box', m_conc:'Concrete, 80 lb bags', m_ledger:'Ledger flashing + lag kit', m_rail:'Railing kit, 6′ section',
+    m_sheet:'Drywall 4×8 sheets, ½″', m_mud:'Joint compound, 4.5 gal', m_tape:'Paper tape, 500′ roll', m_dwscrew:'Drywall screws, 5 lb box', m_bead:'Corner bead, 8′',
+    m_paint5:'Wall paint, 5 gal bucket', m_paint:'Wall paint, 1 gal', m_ceilp:'Ceiling paint, 1 gal', m_supplies:'Tape, rollers, drop plastic',
+    m_fpost:l=>`4×4×${l}′ PT posts`, m_frail:'2×4×8′ PT rails', m_picket:h=>`1×6×${h}′ pickets`, m_nails:'Fence nails, 5 lb box', m_gate:'Gate hardware kit',
+    invTab:'Invoices', pnlTab:'Profit & Loss', pnlH:m=>`P&L · ${m}`, month:'November', netProfit:'Net profit', margin:p=>`${p}% margin`, income:'Money in', expenses:'Money out',
+    snap:'Snap a receipt', snapD:'AI reads the store, total and tax — and files it', byCat:'Expenses by category', byJob:'Profit by job', recent:'Recent expenses', jobCost:(i,c)=>`In ${i} · costs ${c}`,
+    c_mat:'Materials', c_sub:'Subcontractors', c_pay:'Payroll', c_fuel:'Fuel', c_tools:'Tools & equipment', c_over:'Insurance & overhead', c_other:'Other',
+    rcptH:'Add a receipt', pickRcpt:'Take a photo of a receipt', rcptDemo:'The demo uses sample receipts. The real app reads your own photo.', rs_lumber:'Mulch', rs_fuel:'Gas', rs_hw:'Hardware',
+    readingR:'Reading receipt…', found:'AI read this receipt — check it over', vendor:'Store', rDate:'Date', total:'Total', tax:'Tax', category:'Category', forJob:'Which job?', noJob:'No job / overhead',
+    saveRcpt:'Save to P&L', savedR:a=>`${a} added to your P&L`, copyPnl:'Copy P&L to spreadsheet', copiedPnl:'P&L copied! Paste it into Excel or Google Sheets.', subAuto:'Paying a sub adds it here automatically.',
+    hint_pnl:'Your running profit and loss. Tap “Snap a receipt” to add an expense.', hint_receipt:'Tap a sample receipt to see AI read it.', hint_receiptDraft:'Check what AI found, pick the job, then save.',
+    pfTab:'Pro forma', pfH:'Labor rate pro forma', pfLive:'Uses your crew’s pay from the Crew tab. Change “Your rate” and every new invoice and estimate uses it.', pfLabor:'Labor cost / billable hr', pfOvh:'Overhead / billable hr', pfBE:'Break-even rate', pfCharge:'Charge at least',
+    pfCrew:'Crew', pfRate:'$ / hr', pfHrs:'Hrs / wk', pfBurden:'Payroll taxes + workers’ comp', pfBill:'Hours you can actually bill', pfOvhH:'Monthly overhead', pfOvT:'Total overhead', pfTarget:'Target profit', pfCur:'Your rate',
+    pfOk:(r,p)=>`At $${r}/hr you keep about ${p}% on labor — above your target.`, pfWarn:(r,p,g,c)=>`At $${r}/hr you keep only ${p}% — below your ${g}% target. Raise it to ${c}.`, pfBad:(r,l)=>`At $${r}/hr you lose about ${l} on every billable hour.`,
+    pfMonth:'One month at your rate', pfBillHrs:'Billable hours', pfLabBilled:'Labor billed', pfCrewCost:'Crew pay + taxes + comp', pfOverhead:'Overhead', pfProfit:'Profit', pfJob:'Price a job', pfJobHrs:'Labor hours on this job', pfCost:'Your cost',
+    pfAtTarget:c=>`Price at target (${c}/hr)`, pfAtRate:r=>`Price at your rate ($${r}/hr)`, pfJobProfit:'Profit at your rate', pfNote:'Sample numbers. Ask your accountant or insurance agent for your real payroll tax and workers’ comp rates.',
+    chipOk:(r,c)=>`✓ $${r}/hr beats your ${c}/hr target`, chipWarn:(r,c)=>`⚠ $${r}/hr is under your ${c}/hr target`, chipBad:(r,b)=>`⚠ $${r}/hr is below break-even (${b}/hr)`, hint_pf:'Your crew’s real cost per hour. Type over any number — it all updates live.',
+    ov_truck:'Trucks, trailers, gas', ov_ins:'Insurance', ov_tools:'Mowers, blowers, trimmers', ov_office:'Phone, software, office', ov_shop:'Equipment yard', ov_owner:'Owner salary', rateSet:r=>`Your rate is now $${r}/hr on new invoices and estimates`,
+    tChat:'Chat', chatH:'Job chat', threadsTab:'Chats', flaggedTab:'Flagged', pinnedLbl:'Pinned', loopedIn:'Looped in', flaggedBy:n=>`Flagged by ${n}`, resolvedBy:n=>`Resolved by ${n}`,
+    msgPh:'Message… type @ to loop someone in', loopWho:'Loop in who?', crewL:'Crew', subsL:'Subs', addPhoto:'Add photo', photoOn:'Photo attached', send:'Send',
+    pinIt:'📌 Pin to top', unpin:'📌 Unpin', flagIt:'🚩 Flag for follow-up', resolve:'✓ Mark resolved', close:'Close', cleanNote:'Messages and photos are checked — keep it clean and professional.',
+    cleanMsg:'Let’s keep it professional — please reword that.', photoChecked:'Photo checked ✓', noFlags:'Nothing flagged. Nice.', openIn:'Open chat', r_appr:'Apprentice',
+    th_team:'Whole crew', autoCrew:'On it 👍', autoSub:'Got it — we’ll confirm tonight.', hint_chat:'A chat for each job, with photos. 📌 pin, 🚩 flag, @ to loop people in.',
+    hint_thread:'Tap ⋯ on a message to pin or flag it. Tap @ to loop someone in.', hint_flagged:'Everything flagged for follow-up, across all jobs.', subTag:'Sub',
+    drywall:'Contractor leaf bags (60)', mud:'Gutter clean-out, 3 units', paint:'Leaf vacuum trailer', debris:'Dump fee', newInvoice:'New invoice', subLbl:'Sub',
+    tCrew:'Crew', empTab:'Employees', subTab:'Subcontractors',
+    hint_crew:'Clock in to a job. Each crew member does this from their own phone.', hint_subs:'Track subs’ insurance, W-9s and what you owe them.',
+    yourClock:'Your time clock', onClock:'On the clock', offClock:'Off the clock', clockIn:'Clock in', clockOut:'Clock out', pickJob:'Which job?', since:x=>`since ${x}`,
+    clockedIn:j=>`Clocked in at ${j} · location stamped`, clockedOut:(d,j)=>`Clocked out — ${d} on ${j}`, weekHrs:h=>`${h} hrs this week`, lastOut:x=>`Clocked out ${x}`,
+    r_owner:'Owner', r_lead:'Crew leader', r_plumb:'Irrigation tech', r_help:'Helper', r_new:'New hire', perHr:r=>`$${r}/hr`,
+    payroll:'Payroll this week', onNow:'On the clock now', copyTime:'Copy timesheets', copiedTime:'Timesheets copied! Paste into Excel or your payroll.',
+    invPend:'Invite sent — waiting to join', addEmp:'Add employee', addEmpD:'They get a text to set up their own clock-in', name:'Name', role:'Role / trade', rate:'Hourly rate ($)', sendInvite:'Text them an invite', cancel:'Cancel', empAdded:n=>`Invite texted to ${n}`,
+    subsOwed:'You owe subs', subsYtd:'Paid this year', alerts:'Insurance alerts',
+    coiOk:d=>`Insurance good to ${d}`, coiSoon:d=>`Insurance expires ${d}`, coiExp:d=>`Insurance expired ${d}`, coiNone:'No insurance on file',
+    w9ok:'W-9 on file', w9no:'W-9 missing', paySub:a=>`Pay ${a}`, paidSub:(a,n)=>`${a} sent to ${n} by bank transfer`,
+    reqCoi:'Request new insurance', reqDocs:'Request W-9', reqSent:n=>`Text sent to ${n} with an upload link`, ytd1099:a=>`${a} paid this year · for their 1099`,
+    addSub:'Add subcontractor', addSubD:'They get a text to upload insurance + W-9', company:'Company', trade:'Trade', subAdded:n=>`Upload link texted to ${n}`, notAssigned:'Not on a job right now',
+    tr_elec:'Irrigation', tr_dry:'Tree work', tr_hvac:'Hardscapes',
+    seeThem:'See what they see', back:'Back to today',
+    biz:'Greenline Lawn & Landscape', date:'Sunday, Nov 15', doneH:'Your job is <span style="color:#8A6500">done.</span>',
+    subtotal:'Job total', apple:'Pay with Apple Pay', gpay:'Pay with Google Pay', ccard:'Credit or debit card', bankPay:'Bank transfer (ACH)', bankD:'Lowest fee for Marcus',
+    secure:'Secure payment · No account needed', thanksH:'Thank you!', paidAmt:(t)=>`${t} paid`,
+    paidApple:'Paid with Apple Pay.', paidGoogle:'Paid with Google Pay.', paidCC:'Paid with card ending 4417.', paidBank:'Bank transfer started.',
+    news:'Marcus got the news. Your receipt and warranty info are on the way by text.', review:'Leave Ridgeline a Google review', seeMarcus:'See Marcus’s side',
+    paidBig:'PAID', paidYou:n=>`${n} paid you`, depositW:'Deposit (Nov 11)', todayW:'Paid today', paidWith:'Paid with',
+    goesTo:'Goes to', bank:'Your business bank account', applePay:'Apple Pay', googlePay:'Google Pay', creditCard:'Credit/debit card', ach:'Bank transfer', cash:'Check or cash',
+    thanks:'Text a thank-you + review link',
+    schedule:'Schedule', schedSub:'This week · Nov 15–20', everyone:'Everyone', hrs:h=>`${h}h`, hours:h=>`${h} hrs`,
+    noJobs:'No jobs for this person on this day.', textCrew:'Text the crew their schedule', textedCrew:'Schedule texted to Dre, Tony and Luis',
+    days:['Sun','Mon','Tue','Wed','Thu','Fri'], mon:d=>`Nov ${d}`,
+    bills:'Money', paidW:'Paid', waitingW:'Waiting', overdueW:'Overdue', all:'All', estimatesW:'Estimates',
+    stPaid:'Paid', stOpened:'Opened', stSent:'Sent', stOver:'Overdue', stEst:'Estimate', stApproved:'Approved',
+    copy:'Copy to spreadsheet', copied:'Copied! Paste it into Excel or Google Sheets.', copyFail:'Copy didn’t work here — try on your phone.',
+    ev_est:'Estimate sent', ev_approved:'Estimate approved', ev_deposit:'Deposit paid', ev_sent:'Invoice sent by text', ev_opened:'Customer opened it', ev_reminder:'Reminder sent', ev_paid:'Paid in full', notYet:'Not yet',
+    remind:'Send a reminder', reminded:'Reminder texted to', markCash:'Mark paid (check or cash)', backBills:'Money', approveDemo:'Mark estimate approved',
+    clients:'Clients', totalPaid:'Paid so far', owes:'Owes', noBills:'Nothing here.', props:n=>`${n} properties`, landlord:'Landlord',
+    invite:'Invite a new customer', inviteD:'They get a text with a sign-up link',
+    invited:'Ridgeline Repair invited you', joinTitle:'Set up easy payments', yourName:'Your name', phone:'Mobile number', address:'Property address', howPay:'How do you want to pay?',
+    autopay:'Pay automatically when a job is done', autopayD:'You still get the invoice and photos first.', autopayTag:'Autopay',
+    join:'Save and finish', noAcct:'No app to download. No password.', joined:'You’re all set!', joinedMsg:'Marcus can now text you invoices with photos. Pay in one tap.', seeClients:'See it in Clients', newTag:'New'
+  },
+  es: {
+    restart:'Actualizar', pro:'Jardinero', customer:'Cliente', office:'Oficina',
+    hint_today:'Tú eres el jardinero. Toca “Cobrar” en Los Henderson.',
+    hint_todayDone:'Ahora toca “Dinero” abajo para ver el seguimiento.',
+    hint_bill:'Pon las horas y materiales, y toca “Enviar por texto”.',
+    hint_sent:'¡Factura enviada! Toca “Ver lo que ve el cliente”.',
+    hint_client:'Ahora eres el cliente. Mira las fotos y paga.',
+    hint_clientPaid:'¡Pagado! Toca “Ver el lado de Marcus”.',
+    hint_paid:'Marcus recibe su pago. Toca “Volver a hoy”.',
+    hint_schedule:'Toca un día, o una persona para ver solo sus trabajos.',
+    hint_bills:'Presupuestos y facturas, hasta que se pagan. Toca uno.',
+    hint_billDetail:'El historial completo — del presupuesto al pago.',
+    hint_clients:'Dueños de casa y propietarios, y lo que deben.',
+    hint_signup:'Esto ve un cliente nuevo cuando abre el enlace.', hint_signupDone:'¡Listo! Toca “Verlo en Clientes”.',
+    hey:'Buenos días, Marcus.', jobsToday:'3 trabajos para hoy.', week:'Cobrado esta semana', nPaid:n=>`${n} pagados`, nWait:n=>`${n} pendientes`,
+    today:'Hoy', seeAll:'Ver todo', done:'Terminado', sendBill:'Cobrar', upNext:'Siguiente', billSent:'Enviada', opened:'Abierta',
+    job1:'Corte semanal + orillas', job2:'Mantillo + poda de arbustos', job3:'Limpieza de hojas, unidades A–C', sendABill:'Enviar una factura',
+    tToday:'Hoy', tSched:'Horario', tBills:'Dinero', tClients:'Clientes',
+    newBill:'Nueva factura', billTo:'Factura a', change:'Cambiar', jobLbl:'Trabajo', jobName:'Mantillo nuevo, orillas y poda de arbustos',
+    labor:'Mano de obra', hoursAt:r=>`horas × $${r}/hr`, materials:'Materiales', tapToggle:'toca para quitar',
+    heater:'Mantillo de madera, 8 yd³', tank:'Orilla de acero, 40 pies', fittings:'Control de maleza preemergente', haul:'Retiro de ramas y basura',
+    photos:'Fotos del trabajo', before:'Antes', after:'Después', addPhotos:'Adjuntar fotos de antes/después', addPhotosD:'Los clientes pagan más rápido si ven el trabajo',
+    deposit:'Depósito ya pagado', note:'Nota para el cliente',
+    noteText:'Los jardines tienen mantillo, orillas y sin maleza. Riegue los arbustos nuevos dos veces por semana el primer mes.',
+    jobTotal:'Total del trabajo', due:'Saldo a pagar', textBill:'Enviar por texto',
+    sent:'¡Enviada!', sentMsg:(t,n)=>`${n} recibió un texto con el enlace para pagar <strong>${t}</strong>. Te avisamos en cuanto pague.`,
+    stProg:'En curso', ev_partial:'Pago parcial recibido', ev_progress:'Pago recibido', contract:'Total del contrato', paidSoFar:'Pagado hasta ahora', balance:'Saldo', paySched:'Calendario de pagos',
+    ms_dep:'Depósito — para empezar', ms_frame:'Semana 2 — base y adoquines', ms_roof:'Semana 3 — muro e iluminación', ms_final:'Final — plantas y césped',
+    msPaid:d=>`Pagado ${d}`, msPartial:(p,a)=>`${p} de ${a} pagado`, msReady:'Listo para cobrar', msLater:'Todavía no', msSent:'Factura enviada — esperando',
+    sendMs:a=>`Enviar factura de ${a}`, msTexted:(a,n)=>`Factura de ${a} enviada a ${n}`, remindRest:a=>`Recordar ${a}`, recordPay:a=>`Registrar cheque/efectivo de ${a}`, recorded:a=>`Pago de ${a} registrado`, ofTotal:a=>`de ${a}`, balLeft:a=>`quedan ${a}`,
+    hint_progress:'Trabajo de 4 semanas cobrado por etapas. Cobra cada etapa al terminarla.',
+    estimate:'Presupuestar un trabajo', newEst:'Nuevo presupuesto', estH:'Calculadora', whatBuild:'¿Qué trabajo es?', pt_deck:'Corte de césped', pt_drywall:'Mantillo', pt_paint:'Instalar césped', pt_fence:'Limpieza de hojas',
+    fromPhoto:'Empezar con una foto', fromPhotoD:'Toma una foto — la IA calcula el tamaño y el trabajo', demoPhotos:'La demo usa fotos de ejemplo. La app real lee tu propia foto.',
+    ph_deck:'Césped', ph_wall:'Jardines', ph_fence:'Patio con hojas', reading:'Leyendo la foto…', aiGuess:'Cálculo de la IA — revisa tus medidas',
+    dims:'Medidas', d_Ldeck:'Largo junto a la casa (pies)', d_Wdeck:'Fondo desde la casa (pies)', d_L:'Largo del cuarto (pies)', d_W:'Ancho del cuarto (pies)', d_H:'Altura del techo (pies)', d_coats:'Capas', d_len:'Largo de la cerca (pies)', d_fh:'Altura', d_gates:'Puertas',
+    o_rail:'Agregar baranda', o_ceil:'Incluir techo', matList:'Materiales', matSub:'Subtotal de materiales', markup:'Margen en materiales', laborEst:h=>`Mano de obra · ${h} h × $${RATE}`, estTotal:'Total del presupuesto', customer:'Cliente',
+    sendEst:'Enviar presupuesto al cliente', estSent:n=>`Presupuesto enviado a ${n}`, copyMats:'Copiar lista de compras', copiedMats:'¡Lista copiada! Pégala en un texto o nota.', priceNote:'Precios de ejemplo. En la app real pones tu propia lista de precios.',
+    hint_estimator:'Elige un proyecto y escribe las medidas — o empieza con una foto.', sqft:a=>`${a} pies²`, lft:a=>`${a} pies lineales`,
+    repW:'Cada semana', repB:'Cada 2 semanas', perVisit:(h,p)=>`Unas ${h} h por visita · ${p} de mano de obra por visita`,
+    d_lawn:'Tamaño del césped (pies²)', d_visits:'Visitas por mes', d_bed:'Área del jardín (pies²)', d_depth:'Grosor del mantillo (pulgadas)', d_sL:'Largo (pies)', d_sW:'Ancho (pies)', d_yard:'Tamaño del patio (pies²)',
+    o_edge:'Orillas, recorte y soplado cada visita', o_fabric:'Agregar tela antimaleza', o_prep:'Arar y poner tierra primero', o_heavy:'Muchas hojas (muchos árboles)',
+    m_fuel:'Gasolina y cuchillas, por visita', m_line:'Hilo de orilladora', m_mulch:d=>`Mantillo de madera, yd³ (${d}″)`, m_deliv:'Entrega de mantillo', m_preem:'Preemergente, bolsa', m_fabric:'Tela antimaleza, rollo de 300 pies²',
+    m_sod:'Césped en rollo, pallet (450 pies²)', m_starter:'Fertilizante inicial, bolsa', m_topsoil:'Tierra, yd³', m_bagbox:'Bolsas para hojas, caja de 20', m_dump:'Cuota del basurero',
+    m_joist:l=>`Vigas 2×8×${l}′ tratadas`, m_rim:'Tablas perimetrales 2×8×16′', m_beam:'Tablas de viga 2×10×16′', m_post:'Postes 6×6×10′ tratados', m_deck:'Tablas de deck 5/4×6×16′', m_hanger:'Soportes de viga', m_dscrew:'Tornillos de deck, caja 5 lb', m_conc:'Concreto, bolsas 80 lb', m_ledger:'Kit de tapajuntas y tornillos', m_rail:'Kit de baranda, sección 6′',
+    m_sheet:'Placas de drywall 4×8, ½″', m_mud:'Masilla, 4.5 gal', m_tape:'Cinta de papel, rollo 500′', m_dwscrew:'Tornillos de drywall, caja 5 lb', m_bead:'Esquinero, 8′',
+    m_paint5:'Pintura de pared, cubeta 5 gal', m_paint:'Pintura de pared, 1 gal', m_ceilp:'Pintura de techo, 1 gal', m_supplies:'Cinta, rodillos, plástico',
+    m_fpost:l=>`Postes 4×4×${l}′ tratados`, m_frail:'Rieles 2×4×8′ tratados', m_picket:h=>`Tablas 1×6×${h}′`, m_nails:'Clavos de cerca, caja 5 lb', m_gate:'Kit de herrajes de puerta',
+    invTab:'Facturas', pnlTab:'Ganancias y pérdidas', pnlH:m=>`G y P · ${m}`, month:'Noviembre', netProfit:'Ganancia neta', margin:p=>`${p}% de margen`, income:'Entró', expenses:'Salió',
+    snap:'Foto de un recibo', snapD:'La IA lee la tienda, el total y el impuesto — y lo archiva', byCat:'Gastos por categoría', byJob:'Ganancia por trabajo', recent:'Gastos recientes', jobCost:(i,c)=>`Entró ${i} · costos ${c}`,
+    c_mat:'Materiales', c_sub:'Subcontratistas', c_pay:'Nómina', c_fuel:'Gasolina', c_tools:'Herramientas y equipo', c_over:'Seguro y gastos fijos', c_other:'Otros',
+    rcptH:'Agregar un recibo', pickRcpt:'Toma una foto del recibo', rcptDemo:'La demo usa recibos de ejemplo. La app real lee tu propia foto.', rs_lumber:'Mantillo', rs_fuel:'Gasolina', rs_hw:'Ferretería',
+    readingR:'Leyendo el recibo…', found:'La IA leyó este recibo — revísalo', vendor:'Tienda', rDate:'Fecha', total:'Total', tax:'Impuesto', category:'Categoría', forJob:'¿Qué trabajo?', noJob:'Sin trabajo / gastos fijos',
+    saveRcpt:'Guardar en G y P', savedR:a=>`${a} agregado a tus ganancias y pérdidas`, copyPnl:'Copiar a hoja de cálculo', copiedPnl:'¡Copiado! Pégalo en Excel o Google Sheets.', subAuto:'Al pagar a un subcontratista se agrega aquí solo.',
+    hint_pnl:'Tus ganancias y pérdidas al día. Toca “Foto de un recibo” para agregar un gasto.', hint_receipt:'Toca un recibo de ejemplo para ver cómo lo lee la IA.', hint_receiptDraft:'Revisa lo que encontró la IA, elige el trabajo y guarda.',
+    pfTab:'Proforma', pfH:'Proforma de mano de obra', pfLive:'Usa el pago de tu equipo de la pestaña Equipo. Cambia “Tu tarifa” y cada factura y presupuesto nuevo la usa.', pfLabor:'Costo de mano de obra / hora', pfOvh:'Gastos fijos / hora', pfBE:'Punto de equilibrio', pfCharge:'Cobra al menos',
+    pfCrew:'Equipo', pfRate:'$ / hora', pfHrs:'Horas / sem', pfBurden:'Impuestos de nómina + seguro laboral', pfBill:'Horas que sí puedes cobrar', pfOvhH:'Gastos fijos mensuales', pfOvT:'Total de gastos fijos', pfTarget:'Ganancia deseada', pfCur:'Tu tarifa',
+    pfOk:(r,p)=>`A $${r}/hora ganas cerca de ${p}% en mano de obra — arriba de tu meta.`, pfWarn:(r,p,g,c)=>`A $${r}/hora ganas solo ${p}% — abajo de tu meta de ${g}%. Súbela a ${c}.`, pfBad:(r,l)=>`A $${r}/hora pierdes cerca de ${l} por cada hora cobrada.`,
+    pfMonth:'Un mes a tu tarifa', pfBillHrs:'Horas cobradas', pfLabBilled:'Mano de obra cobrada', pfCrewCost:'Pago + impuestos + seguro', pfOverhead:'Gastos fijos', pfProfit:'Ganancia', pfJob:'Precio de un trabajo', pfJobHrs:'Horas de mano de obra', pfCost:'Tu costo',
+    pfAtTarget:c=>`Precio a tu meta (${c}/hora)`, pfAtRate:r=>`Precio a tu tarifa ($${r}/hora)`, pfJobProfit:'Ganancia a tu tarifa', pfNote:'Números de ejemplo. Pide a tu contador o agente de seguros tus tasas reales.',
+    chipOk:(r,c)=>`✓ $${r}/hora supera tu meta de ${c}/hora`, chipWarn:(r,c)=>`⚠ $${r}/hora está abajo de tu meta de ${c}/hora`, chipBad:(r,b)=>`⚠ $${r}/hora está abajo del equilibrio (${b}/hora)`, hint_pf:'El costo real de tu equipo por hora. Cambia cualquier número — todo se actualiza.',
+    ov_truck:'Camionetas, remolques, gasolina', ov_ins:'Seguro', ov_tools:'Podadoras, sopladoras, orilladoras', ov_office:'Teléfono, software, oficina', ov_shop:'Patio de equipo', ov_owner:'Salario del dueño', rateSet:r=>`Tu tarifa ahora es $${r}/hora en facturas y presupuestos nuevos`,
+    tChat:'Chat', chatH:'Chat de trabajos', threadsTab:'Chats', flaggedTab:'Marcados', pinnedLbl:'Fijado', loopedIn:'Incluidos', flaggedBy:n=>`Marcado por ${n}`, resolvedBy:n=>`Resuelto por ${n}`,
+    msgPh:'Mensaje… escribe @ para incluir a alguien', loopWho:'¿A quién incluir?', crewL:'Equipo', subsL:'Subcontratistas', addPhoto:'Agregar foto', photoOn:'Foto adjunta', send:'Enviar',
+    pinIt:'📌 Fijar arriba', unpin:'📌 Quitar fijado', flagIt:'🚩 Marcar para seguimiento', resolve:'✓ Marcar resuelto', close:'Cerrar', cleanNote:'Mensajes y fotos se revisan — mantenlo limpio y profesional.',
+    cleanMsg:'Mantengámoslo profesional — por favor cambia esas palabras.', photoChecked:'Foto revisada ✓', noFlags:'Nada marcado. ¡Bien!', openIn:'Abrir chat', r_appr:'Aprendiz',
+    th_team:'Todo el equipo', autoCrew:'Entendido 👍', autoSub:'Entendido — confirmamos esta noche.', hint_chat:'Un chat por trabajo, con fotos. 📌 fijar, 🚩 marcar, @ para incluir.',
+    hint_thread:'Toca ⋯ en un mensaje para fijarlo o marcarlo. Toca @ para incluir a alguien.', hint_flagged:'Todo lo marcado para seguimiento, en todos los trabajos.', subTag:'Sub',
+    drywall:'Bolsas para hojas (60)', mud:'Limpieza de canaletas, 3 unidades', paint:'Remolque aspirador de hojas', debris:'Cuota del basurero', newInvoice:'Nueva factura', subLbl:'Subcontratista',
+    tCrew:'Equipo', empTab:'Empleados', subTab:'Subcontratistas',
+    hint_crew:'Marca entrada en un trabajo. Cada empleado lo hace desde su teléfono.', hint_subs:'Seguro, W-9 y lo que les debes a tus subcontratistas.',
+    yourClock:'Tu reloj', onClock:'Trabajando', offClock:'Fuera de turno', clockIn:'Marcar entrada', clockOut:'Marcar salida', pickJob:'¿Qué trabajo?', since:x=>`desde ${x}`,
+    clockedIn:j=>`Entrada en ${j} · ubicación registrada`, clockedOut:(d,j)=>`Salida — ${d} en ${j}`, weekHrs:h=>`${h} h esta semana`, lastOut:x=>`Salió ${x}`,
+    r_owner:'Dueño', r_lead:'Jefe de cuadrilla', r_plumb:'Técnico de riego', r_help:'Ayudante', r_new:'Nuevo', perHr:r=>`$${r}/hr`,
+    payroll:'Nómina esta semana', onNow:'Trabajando ahora', copyTime:'Copiar horas', copiedTime:'¡Horas copiadas! Pégalas en Excel o tu nómina.',
+    invPend:'Invitación enviada — esperando', addEmp:'Agregar empleado', addEmpD:'Recibe un texto para marcar entrada desde su teléfono', name:'Nombre', role:'Puesto / oficio', rate:'Pago por hora ($)', sendInvite:'Enviarle invitación', cancel:'Cancelar', empAdded:n=>`Invitación enviada a ${n}`,
+    subsOwed:'Debes a subcontratistas', subsYtd:'Pagado este año', alerts:'Alertas de seguro',
+    coiOk:d=>`Seguro vigente hasta ${d}`, coiSoon:d=>`Seguro vence ${d}`, coiExp:d=>`Seguro venció ${d}`, coiNone:'Sin seguro registrado',
+    w9ok:'W-9 recibido', w9no:'Falta W-9', paySub:a=>`Pagar ${a}`, paidSub:(a,n)=>`${a} enviado a ${n} por transferencia`,
+    reqCoi:'Pedir seguro nuevo', reqDocs:'Pedir W-9', reqSent:n=>`Texto enviado a ${n} con enlace para subir`, ytd1099:a=>`${a} pagado este año · para su 1099`,
+    addSub:'Agregar subcontratista', addSubD:'Recibe un texto para subir seguro y W-9', company:'Compañía', trade:'Oficio', subAdded:n=>`Enlace enviado a ${n}`, notAssigned:'Sin trabajo asignado ahora',
+    tr_elec:'Riego', tr_dry:'Poda de árboles', tr_hvac:'Patios y muros',
+    seeThem:'Ver lo que ve el cliente', back:'Volver a hoy',
+    biz:'Greenline Lawn & Landscape', date:'Domingo, 15 de nov', doneH:'Su trabajo está <span style="color:#8A6500">listo.</span>',
+    subtotal:'Total del trabajo', apple:'Pagar con Apple Pay', gpay:'Pagar con Google Pay', ccard:'Tarjeta de crédito o débito', bankPay:'Transferencia bancaria (ACH)', bankD:'La comisión más baja para Marcus',
+    secure:'Pago seguro · Sin crear cuenta', thanksH:'¡Gracias!', paidAmt:(t)=>`${t} pagado`,
+    paidApple:'Pagado con Apple Pay.', paidGoogle:'Pagado con Google Pay.', paidCC:'Pagado con tarjeta terminada en 4417.', paidBank:'Transferencia iniciada.',
+    news:'Marcus ya recibió la noticia. Su recibo y garantía llegan por texto.', review:'Dejar una reseña en Google', seeMarcus:'Ver el lado de Marcus',
+    paidBig:'PAGADO', paidYou:n=>`${n} te pagó`, depositW:'Depósito (11 nov)', todayW:'Pagado hoy', paidWith:'Pagado con',
+    goesTo:'Se deposita en', bank:'Tu cuenta de banco del negocio', applePay:'Apple Pay', googlePay:'Google Pay', creditCard:'Tarjeta crédito/débito', ach:'Transferencia', cash:'Cheque o efectivo',
+    thanks:'Enviar gracias + enlace de reseña',
+    schedule:'Horario', schedSub:'Esta semana · 15–20 nov', everyone:'Todos', hrs:h=>`${h}h`, hours:h=>`${h} horas`,
+    noJobs:'Esta persona no tiene trabajos este día.', textCrew:'Enviar el horario al equipo', textedCrew:'Horario enviado a Dre, Tony y Luis',
+    days:['Dom','Lun','Mar','Mié','Jue','Vie'], mon:d=>`${d} nov`,
+    bills:'Dinero', paidW:'Pagado', waitingW:'Pendiente', overdueW:'Atrasado', all:'Todos', estimatesW:'Presupuestos',
+    stPaid:'Pagado', stOpened:'Abierta', stSent:'Enviada', stOver:'Atrasado', stEst:'Presupuesto', stApproved:'Aprobado',
+    copy:'Copiar a hoja de cálculo', copied:'¡Copiado! Pégalo en Excel o Google Sheets.', copyFail:'No se pudo copiar aquí — prueba en tu teléfono.',
+    ev_est:'Presupuesto enviado', ev_approved:'Presupuesto aprobado', ev_deposit:'Depósito pagado', ev_sent:'Factura enviada por texto', ev_opened:'El cliente la abrió', ev_reminder:'Recordatorio enviado', ev_paid:'Pagado completo', notYet:'Todavía no',
+    remind:'Enviar recordatorio', reminded:'Recordatorio enviado a', markCash:'Marcar pagado (cheque o efectivo)', backBills:'Dinero', approveDemo:'Marcar presupuesto aprobado',
+    clients:'Clientes', totalPaid:'Pagado', owes:'Debe', noBills:'No hay nada aquí.', props:n=>`${n} propiedades`, landlord:'Propietario',
+    invite:'Invitar a un cliente nuevo', inviteD:'Recibe un texto con el enlace para registrarse',
+    invited:'Ridgeline Repair le invitó', joinTitle:'Configure pagos fáciles', yourName:'Su nombre', phone:'Número de celular', address:'Dirección de la propiedad', howPay:'¿Cómo quiere pagar?',
+    autopay:'Pagar automáticamente al terminar un trabajo', autopayD:'Primero recibe la factura y las fotos.', autopayTag:'Pago automático',
+    join:'Guardar y terminar', noAcct:'Sin descargar app. Sin contraseña.', joined:'¡Todo listo!', joinedMsg:'Marcus ahora puede enviarle facturas con fotos. Pague con un toque.', seeClients:'Verlo en Clientes', newTag:'Nuevo'
+  }
+};
+let RATE=60, DEPOSIT=150;
+const MATS=[{id:'heater',price:336},{id:'tank',price:118},{id:'fittings',price:45},{id:'haul',price:75}];
+const MATS_O=[{id:'drywall',price:39},{id:'mud',price:180},{id:'paint',price:95},{id:'debris',price:45}];
+const BJ={
+  hendersons:{id:'hendersons',client:'The Hendersons',ini:'TH',jobKey:'jobName',jobShort:'job2',hours:6,deposit:150,mats:MATS,photo:'heater'},
+  oak:{id:'oakb',client:'Oak St Rentals',ini:'OS',jobKey:'job3',jobShort:'job3',hours:9,deposit:0,mats:MATS_O,photo:'wall'}
+};
+const CREW=[{id:'marcus',n:'Marcus',c:'#8A6500'},{id:'dre',n:'Dre',c:'#111111'},{id:'tony',n:'Tony',c:'#4E6B2F'},{id:'luis',n:'Luis',c:'#6B8E23'},{id:'james',n:'James',c:'#7A7568'}];
+const seedEmps=()=>[
+  {id:'marcus',n:'Marcus',c:'#8A6500',role:'r_owner',rate:0,wk:31.5,last:'11:58 AM'},
+  {id:'dre',n:'Dre',c:'#111111',role:'r_lead',rate:22,wk:28,on:true,since:'2:24 PM',job:'Oak St Rentals'},
+  {id:'tony',n:'Tony',c:'#4E6B2F',role:'r_plumb',rate:24,wk:30.5,last:'3:05 PM'},
+  {id:'james',n:'James',c:'#7A7568',role:'r_appr',rate:16,wk:22,last:'1:30 PM'},
+  {id:'luis',n:'Luis',c:'#6B8E23',role:'r_help',rate:17,wk:24,on:true,since:'2:26 PM',job:'Oak St Rentals'}
+];
+const seedSubs=()=>[
+  {id:'bce',n:'Bull City Irrigation',trade:'tr_elec',coi:'ok',coiDate:'Mar 2027',w9:true,job:'Brooks — deck lighting',owed:850,ytd:6400},
+  {id:'tdw',n:'Triangle Tree Service',trade:'tr_dry',coi:'soon',coiDate:'Nov 25',w9:true,job:'Oak St Rentals — unit B',owed:1400,ytd:9200},
+  {id:'cap',n:'Capital Hardscapes',trade:'tr_hvac',coi:'expired',coiDate:'Oct 31',w9:false,job:null,owed:0,ytd:2100}
+];
+const JOBS={
+  15:[{t:'7:30 AM',c:'Kim',j:'Weekly mow + edge',a:'North Hills',h:1,crew:['marcus','dre'],rep:'w'},{t:'9:00 AM',c:'The Hendersons',j:'Mulch beds + shrub trim',a:'Cary',h:6,crew:['marcus','tony']},{t:'2:30 PM',c:'Oak St Rentals',j:'Leaf cleanup, units A–C',a:'Five Points',h:5,crew:['dre','luis']}],
+  16:[{t:'7:30 AM',c:'Patel',j:'Weekly mow + edge',a:'Wake Forest',h:1,crew:['dre','luis'],rep:'w'},{t:'9:00 AM',c:'Lee',j:'Mowing estimate walk',a:'Holly Springs',h:1,crew:['marcus']},{t:'10:00 AM',c:'Oak St Rentals',j:'Gutters, units A–C',a:'Five Points',h:4,crew:['dre','luis'],sub:'Triangle Tree Service'},{t:'1:00 PM',c:'Nguyen',j:'Every-2-week mow',a:'Morrisville',h:1,crew:['tony'],rep:'b'}],
+  17:[{t:'8:00 AM',c:'Carter',j:'Sod install, front yard',a:'Garner',h:7,crew:['tony','luis','james']},{t:'8:00 AM',c:'Smith',j:'Weekly mow + edge',a:'Cary',h:1,crew:['dre'],rep:'w'}],
+  18:[{t:'7:30 AM',c:'Brooks',j:'Patio + plantings — week 3',a:'Apex',h:8,crew:['marcus','dre','james']},{t:'8:00 AM',c:'Lee',j:'Weekly mow + edge',a:'Holly Springs',h:1,crew:['tony','luis'],rep:'w'}],
+  19:[{t:'7:30 AM',c:'Brooks',j:'Patio + plantings — week 3',a:'Apex',h:8,crew:['marcus','dre','tony'],sub:'Bull City Irrigation'},{t:'1:00 PM',c:'Oak St Rentals',j:'Leaf cleanup, building 2',a:'Five Points',h:4,crew:['luis'],rep:'w'}],
+  20:[{t:'7:30 AM',c:'Kim',j:'Weekly mow + edge',a:'North Hills',h:1,crew:['tony'],rep:'w'},{t:'9:00 AM',c:'Patel',j:'Shrub trim',a:'Wake Forest',h:3,crew:['marcus','luis']}]
+};
+const seedBills=()=>[
+  {id:'kim',client:'Kim',job:'November mowing (4 visits)',d:15,amount:220,status:'paid',method:'card',ev:[['sent',15,'10:45 AM'],['opened',15,'10:52 AM'],['paid',15,'10:58 AM']]},
+  {id:'oak',client:'Oak St Rentals',job:'Fall cleanup, building 1',d:13,amount:1180,status:'opened',ev:[['sent',13,'4:10 PM'],['opened',13,'6:22 PM']]},
+  {id:'brooks',client:'Brooks',job:'Backyard patio + plantings',d:13,amount:14800,status:'progress',ev:[['partial',13,'4:40 PM']],
+    ms:[{k:'ms_dep',pct:30,amt:4440,paid:4440,st:'paid',date:'Nov 2'},{k:'ms_frame',pct:25,amt:3700,paid:2500,st:'partial',date:'Nov 13'},{k:'ms_roof',pct:25,amt:3700,paid:0,st:'ready'},{k:'ms_final',pct:20,amt:2960,paid:0,st:'later'}]},
+  {id:'lee',client:'Lee',job:'Weekly mowing, 2027 season',d:14,amount:680,status:'estimate',ev:[['est',14,'5:30 PM']]},
+  {id:'nguyen',client:'Nguyen',job:'Aeration + overseed',d:13,amount:385,status:'paid',method:'apple',ev:[['sent',13,'12:05 PM'],['opened',13,'12:20 PM'],['paid',13,'12:21 PM']]},
+  {id:'patel',client:'Patel',job:'Gutters + leaf cleanup',d:12,amount:455,status:'paid',method:'bank',ev:[['sent',12,'3:15 PM'],['opened',12,'5:02 PM'],['paid',12,'5:04 PM']]},
+  {id:'carter',client:'Carter',job:'Sod, front yard',d:9,amount:520,status:'overdue',ev:[['sent',9,'2:40 PM'],['reminder',13,'9:00 AM']]}
+];
+const fresh=()=>({screen:'today',billFor:'hendersons',hours:6,mats:{heater:true,tank:true,fittings:true,haul:true},photos:true,method:null,sent:false,
+  bills:seedBills(),day:15,who:'all',filter:'all',billId:null,toast:'',autopay:false,newClient:null,suMethod:'bank',suAuto:false,
+  chat:{threads:seedChat(),tab:'threads',open:null,draft:'',draftTags:[],draftPhoto:false,tagOpen:false,menu:null},
+  pf:{hpw:{},burden:20,bill:80,mg:20,jh:40,ovh:[['ov_truck',1400],['ov_ins',600],['ov_tools',700],['ov_office',300],['ov_shop',500],['ov_owner',5000]]},
+  exp:seedExp(),moneyTab:'inv',rc:{reading:null,draft:null,key:null},
+  est:{type:'deck',dims:{L:9000,W:4},edge:true,fabric:false,prep:true,heavy:false,markup:15,client:'Ramirez',fromPhoto:null,reading:false,back:'today'},
+  emps:seedEmps(),subs:seedSubs(),crewTab:'emp',sheet:null,clock:{on:false,job:'The Hendersons',start:0}});
+let lang='en'; try{lang=localStorage.getItem('yhub-lang')||'en'}catch(e){}
+let S=fresh();
+const money=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const whole=n=>'$'+Math.round(n).toLocaleString('en-US');
+const cur=()=>BJ[S.billFor];
+const sub=()=>S.hours*RATE+cur().mats.filter(m=>S.mats[m.id]).reduce((x,m)=>x+m.price,0);
+const due=()=>sub()-cur().deposit;
+const hb=()=>S.bills.find(b=>b.id==='hendersons');
+const cb=()=>S.bills.find(b=>b.id===cur().id);
+const setBill=k=>{S.billFor=k;S.hours=BJ[k].hours;S.mats={};BJ[k].mats.forEach(m=>S.mats[m.id]=true);S.sent=false;};
+const hms=ms=>{const s=Math.floor(ms/1000);return `${Math.floor(s/3600)}:${String(Math.floor(s/60)%60).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`};
+const esc=s=>String(s).replace(/[<>&"]/g,'').trim();
+const crewOf=id=>CREW.find(c=>c.id===id);
+const av=id=>{const c=crewOf(id);return `<span class="av" style="background:${c.c}" title="${c.n}">${c.n[0]}</span>`};
+const icon={
+  wrench:c=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0 5 5L21 13l-8 8-2-2-6 0 0-6 8-8 1.7.3"/><path d="M14.7 6.3 17 4a4 4 0 0 1 3 3l-2.3 2.3"/></svg>`,
+  hammer:c=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 12 L5 22 L2 19 L12 9"/><path d="M11 6 L14 3 L21 10 L18 13 Z"/></svg>`,
+  roof:c=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12 L12 4 L22 12"/><path d="M5 10 V20 H19 V10"/><path d="M10 20 V14 H14 V20"/></svg>`,
+  hardhat:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 18 H21.5"/><path d="M5 18 V15 A7 7 0 0 1 19 15 V18"/><path d="M10 8.5 V12 M14 8.5 V12"/></svg>`,
+  chat:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5 H20 V16 H11 L6 20 V16 H4 Z"/><path d="M8 9.5 H16 M8 12.5 H13" stroke-linecap="round"/></svg>`,
+  camera:`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFD54A" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 8 H7 L9 5 H15 L17 8 H21 V19 H3 Z"/><circle cx="12" cy="13" r="3.5"/></svg>`,
+  ruler:c=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17 L17 3 L21 7 L7 21 Z"/><path d="M7 13 L9 15 M10 10 L12 12 M13 7 L15 9"/></svg>`,
+  clock:c=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L15 14"/></svg>`,
+  cal:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10 H21 M8 3 V7 M16 3 V7"/></svg>`,
+  money:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 9 V9.01 M18 15 V15.01"/></svg>`,
+  people:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20 C3.5 15.5 14.5 15.5 15.5 20"/><path d="M16 4.5 A3.5 3.5 0 0 1 16 11.5"/><path d="M18 15 C20 15.8 21.2 17.5 21.5 20"/></svg>`,
+  home:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 L12 4 L21 11"/><path d="M5 10 V20 H19 V10"/></svg>`,
+  back:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 L8 12 L15 19"/></svg>`,
+  send:c=>`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 L10 14"/><path d="M21 3 L14 21 L10 14 L3 10 Z"/></svg>`,
+  check:c=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${c||'#fff'}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 L10 17.5 L19 7"/></svg>`,
+  logo:`<svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 L28 9 V23 L16 30 L4 23 V9 Z" fill="#111111"/><path d="M16 7 L23.5 11.3 V20.7 L16 25 L8.5 20.7 V11.3 Z" fill="#FFC20E"/><path d="M13 12 V20 M19 12 V20 M13 16 H19" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>`
+};
+const photoSvg=(after,kind)=>kind==='wall'?`<svg viewBox="0 0 160 120" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <rect width="160" height="120" fill="#C9DCEB"/><rect y="58" width="160" height="62" fill="${after?'#6FAF45':'#7FA35F'}"/>
+  ${after?[0,1,2,3,4,5,6,7].map(i=>`<rect x="${i*20}" y="58" width="10" height="62" fill="#7DBE4F"/>`).join(''):Array.from({length:80},(_, i)=>`<ellipse cx="${(i*37)%160}" cy="${62+((i*23)%56)}" rx="3.6" ry="2.2" fill="${['#D9822B','#B5451B','#E0A030','#8C3A12'][i%4]}"/>`).join('')}
+</svg>`:`<svg viewBox="0 0 160 120" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <rect width="160" height="120" fill="#E5DFD2"/><rect y="0" width="160" height="56" fill="#D8CFC0"/><rect y="56" width="160" height="64" fill="#6FAF45"/>
+  <path d="M0 66 Q80 52 160 66 V96 Q80 108 0 96 Z" fill="${after?'#6B4A2E':'#8C7A5C'}"/>
+  ${[20,52,84,116,146].map(x=>`<circle cx="${x}" cy="76" r="${after?10:14}" fill="#4E8B33"/>`).join('')}
+  ${after?'':[10,34,44,70,98,108,130,156].map(x=>`<path d="M${x} 98 l3 -12 l3 12 M${x+2} 98 l-4 -9" stroke="#9CCB5E" stroke-width="2.2" fill="none"/>`).join('')}
+  ${after?'<path d="M0 96 Q80 108 160 96" stroke="#3A3A3A" stroke-width="2.5" fill="none"/>':''}
+</svg>`;
+const conf=()=>[['#FFD54A',36,90,12,12,20,0],['#FFC20E',90,150,8,16,-30,0],['#FFFFFF',300,80,14,9,35,0],['#111111',290,170,10,10,0,5],['#FFD54A',60,260,10,10,0,5],['#FFC20E',320,250,9,15,50,0],['#D3CFC2',190,60,10,6,15,0]]
+  .map(([c,x,y,w,h,r,br])=>`<span class="conf" aria-hidden="true" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:${c};transform:rotate(${r}deg);border-radius:${br}px"></span>`).join('');
+const stChip=(b,t)=>b.status==='paid'?`<span class="chip c-paid">${t.stPaid}</span>`:b.status==='overdue'?`<span class="chip c-over">${t.stOver}</span>`:b.status==='estimate'?`<span class="chip c-est">${t.stEst}</span>`:b.status==='approved'?`<span class="chip c-est">${t.stApproved}</span>`:b.status==='progress'?`<span class="chip" style="background:var(--blue);color:#111111">${t.stProg}</span>`:`<span class="chip c-wait">${b.status==='opened'?t.stOpened:t.stSent}</span>`;
+const isEst=b=>b.status==='estimate'||b.status==='approved';
+const isProg=b=>b.status==='progress';
+const msPaidSum=b=>b.ms.reduce((x,m)=>x+m.paid,0);
+const msOwed=b=>b.ms.filter(m=>m.st==='sent'||m.st==='partial').reduce((x,m)=>x+m.amt-m.paid,0);
+const paidOf=b=>isProg(b)?msPaidSum(b):b.status==='paid'?b.amount:0;
+const oweOf=b=>isProg(b)?msOwed(b):(b.status!=='paid'&&!isEst(b)?b.amount:0);
+const totals=()=>{const p=S.bills.filter(b=>b.status==='paid'),w=S.bills.filter(b=>b.status==='sent'||b.status==='opened'||(isProg(b)&&msOwed(b)>0)),o=S.bills.filter(b=>b.status==='overdue');
+  const sum=a=>a.reduce((x,b)=>x+(isProg(b)?msOwed(b):b.amount),0);return {p,w,o,pS:sum(p),wS:sum(w),oS:sum(o)}};
+const tabs=(t,on)=>{const waiting=S.bills.filter(b=>b.status!=='paid'&&!isEst(b)).length;return `
+<nav class="tabs" aria-label="Main">
+  <button class="${on==='today'?'on':''}" data-act="go" data-v="today">${icon.home}${t.tToday}</button>
+  <button class="${on==='schedule'?'on':''}" data-act="go" data-v="schedule">${icon.cal}${t.tSched}</button>
+  <button class="${on==='bills'?'on':''}" data-act="go" data-v="bills">${icon.money}${t.tBills}${waiting?`<span class="badge">${waiting}</span>`:''}</button>
+  <button class="${on==='chat'?'on':''}" data-act="go" data-v="chat">${icon.chat}${t.tChat}${openFlags()?`<span class="badge" style="background:#D93348">${openFlags()}</span>`:''}</button>
+  <button class="${on==='crew'?'on':''}" data-act="go" data-v="crew">${icon.hardhat}${t.tCrew}</button>
+  <button class="${on==='clients'?'on':''}" data-act="go" data-v="clients">${icon.people}${t.tClients}</button>
+</nav>`};
+
+function today(t){
+  const tt=totals(), j=hb();
+  const jRight=!j?`<button data-act="newInv" data-v="hendersons" class="chip pulse" style="background:var(--blue);color:#111111;border:none;padding:10px 14px;font-size:14px">${t.sendBill}</button>`
+    :j.status==='paid'?`<span class="chip c-paid">${t.stPaid}</span>`
+    :`<span class="chip c-wait">${j.status==='opened'?t.opened:t.billSent}</span>`;
+  return `
+<div class="pad" style="padding-top:22px">
+  <div class="between">
+    <div class="row" style="gap:8px">${icon.logo}<div class="h" style="font-size:24px">YARD <span style="color:var(--blue)">HUB</span></div></div>
+    <div aria-hidden="true" style="width:44px;height:44px;border-radius:22px;background:var(--ink);color:#fff;font-family:'Barlow Condensed';font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;border:3px solid var(--sky)">MR</div>
+  </div>
+  <div><h1 class="h" style="font-size:32px">${t.hey}</h1><p class="muted" style="margin:2px 0 0;font-size:16px">${t.jobsToday}</p></div>
+  <button class="card row" data-act="go" data-v="crew" style="padding:10px 14px;${S.clock.on?'border:2px solid #22C55E':''}">
+    ${icon.clock(S.clock.on?'#11643C':'#5A5850')}
+    <span style="flex:1;min-width:0"><span style="display:block;font-weight:800">${S.clock.on?t.onClock:t.offClock}</span><span class="muted" style="display:block;font-size:13px">${S.clock.on?S.clock.job:t.yourClock}</span></span>
+    ${S.clock.on?`<span class="timer" data-timer style="font-size:22px">${hms(Date.now()-S.clock.start)}</span>`:`<span class="chip" style="background:var(--ink);color:#fff">${t.clockIn}</span>`}
+  </button>
+  <button data-act="go" data-v="bills" style="text-align:left;border:none;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);border-radius:20px;padding:20px;color:#fff;position:relative;overflow:hidden">
+    <svg width="120" height="120" viewBox="0 0 32 32" aria-hidden="true" style="position:absolute;right:-22px;top:-18px;opacity:.35"><path d="M16 2 L28 9 V23 L16 30 L4 23 V9 Z" fill="none" stroke="#FFD54A" stroke-width="1.5"/><path d="M16 7 L23.5 11.3 V20.7 L16 25 L8.5 20.7 V11.3 Z" fill="#FFC20E"/></svg>
+    <span style="display:block;font-size:14px;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:.06em">${t.week}</span>
+    <span class="h" style="display:block;font-size:46px;line-height:1">${money(tt.pS)}</span>
+    <span class="row" style="gap:8px;margin-top:10px"><span class="chip" style="background:#fff;color:var(--navy)">${t.nPaid(tt.p.length)}</span><span class="chip" style="background:var(--blue);color:#111111">${t.nWait(tt.w.length+tt.o.length)}</span></span>
+  </button>
+  <div class="between"><h2 class="h" style="font-size:24px">${t.today.toUpperCase()}</h2><button class="link" style="padding:0" data-act="go" data-v="schedule">${t.seeAll}</button></div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div class="card row"><div class="ico" style="background:#DCF3E6">${icon.roof('#11643C')}</div><div style="flex:1;min-width:0"><div style="font-weight:800">Kim <span class="chip" style="font-size:11px;padding:2px 7px;background:#E3F1D6;color:#2F5212">↻ ${t.repW}</span></div><div class="muted" style="font-size:13px">7:30 AM · ${t.job1}</div></div><span class="chip c-paid">${t.stPaid} $220</span></div>
+    <div class="card row" style="${j?'':'border:2px solid var(--blue)'}"><div class="ico" style="background:var(--ice)">${icon.wrench('#C79500')}</div><div style="flex:1;min-width:0"><div style="font-weight:800">The Hendersons</div><div class="muted" style="font-size:13px">9:00 AM · ${t.job2} · ${t.done}</div></div>${jRight}</div>
+    <div class="card row"><div class="ico" style="background:#ECEAE2">${icon.hammer('#111111')}</div><div style="flex:1;min-width:0"><div style="font-weight:800">Oak St Rentals</div><div class="muted" style="font-size:13px">2:30 PM · ${t.job3}</div></div><span class="chip" style="background:var(--ink);color:#fff">${t.upNext}</span></div>
+  </div>
+  ${j?'':`<button class="big bluebtn" data-act="newInv" data-v="hendersons"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5 V19 M5 12 H19"/></svg>${t.sendABill.toUpperCase()}</button>`}
+  <button class="big blackbtn" data-act="newEst" data-v="today">${icon.ruler('#FFD54A')}${t.estimate.toUpperCase()}</button>
+</div>${tabs(t,'today')}`}
+
+function schedule(t){
+  const days=[15,16,17,18,19,20];
+  const hours={}; CREW.forEach(c=>hours[c.id]=0);
+  Object.values(JOBS).flat().forEach(j=>j.crew.forEach(id=>hours[id]+=j.h));
+  const jobs=JOBS[S.day].filter(j=>S.who==='all'||j.crew.includes(S.who));
+  return `
+<div class="pad" style="padding-top:24px;gap:14px">
+  <div><h1 class="h" style="font-size:32px">${t.schedule.toUpperCase()}</h1><p class="muted" style="margin:2px 0 0;font-size:15px">${t.schedSub}</p></div>
+  <div class="days">${days.map((d,i)=>`<button class="day ${S.day===d?'on':''}" data-act="day" data-v="${d}" aria-pressed="${S.day===d}"><small>${t.days[i]}</small><b>${d}</b></button>`).join('')}</div>
+  <div class="scroller">
+    <button class="crew ${S.who==='all'?'on':''}" data-act="who" data-v="all" style="padding-left:14px">${t.everyone}</button>
+    ${CREW.map(c=>`<button class="crew ${S.who===c.id?'on':''}" data-act="who" data-v="${c.id}" aria-pressed="${S.who===c.id}">${av(c.id)}${c.n} <span class="muted" style="font-weight:700">${t.hrs(hours[c.id])}</span></button>`).join('')}
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    ${jobs.length?jobs.map(j=>`<div class="card row" style="align-items:flex-start;border-left:4px solid var(--blue)">
+      <div style="width:58px;flex-shrink:0"><div class="h" style="font-size:19px">${j.t.split(' ')[0]}</div><div class="muted" style="font-size:12px;font-weight:800">${j.t.split(' ')[1]}</div></div>
+      <div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px">${j.c}</div><div style="font-size:14px;font-weight:600">${j.j}</div><div class="muted" style="font-size:13px">${j.a} · ${t.hours(j.h)}</div>
+        <div class="row" style="gap:8px;margin-top:8px"><span class="stack" style="display:flex">${j.crew.map(av).join('')}</span><span style="font-size:13px;font-weight:700">${j.crew.map(id=>crewOf(id).n).join(' + ')}</span></div>${j.rep?`<span class="chip" style="display:inline-block;margin-top:8px;margin-right:6px;font-size:12px;padding:4px 9px;background:#E3F1D6;color:#2F5212">↻ ${j.rep==='w'?t.repW:t.repB}</span>`:''}${j.sub?`<span class="chip c-est" style="display:inline-block;margin-top:8px;font-size:12px;padding:4px 9px">${t.subLbl}: ${j.sub}</span>`:''}</div>
+    </div>`).join(''):`<div class="card muted" style="text-align:center;padding:24px">${t.noJobs}</div>`}
+  </div>
+  <button class="big blackbtn" style="font-size:19px;height:54px;margin-top:4px" data-act="toast" data-v="textedCrew">${icon.send('#fff')}${t.textCrew}</button>
+</div>${S.toast?`<div class="toast" role="status">${S.toast}</div>`:''}${tabs(t,'schedule')}`}
+
+function bills(t){
+  const tt=totals();
+  const list=S.bills.filter(b=>S.filter==='all'||(S.filter==='paid'&&b.status==='paid')||(S.filter==='est'&&isEst(b))||(S.filter==='waiting'&&b.status!=='paid'&&!isEst(b))).slice().sort((a,b)=>b.d-a.d);
+  const f=[['all',t.all],['est',t.estimatesW],['waiting',t.waitingW],['paid',t.paidW]];
+  return `
+<div class="pad" style="padding-top:24px;gap:14px">
+  <h1 class="h" style="font-size:32px">${t.bills.toUpperCase()}</h1>
+  <div class="segw" role="group" style="grid-template-columns:repeat(3,1fr)">${[['inv',t.invTab],['pnl',t.pnlTab],['pf',t.pfTab]].map(([k,l])=>`<button class="${(S.moneyTab||'inv')===k?'on':''}" data-act="moneyTab" data-v="${k}" style="font-size:14px;line-height:1.1;padding:4px">${l}</button>`).join('')}</div>
+  ${S.moneyTab==='pnl'?pnl(t):S.moneyTab==='pf'?pfView(t):`
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <button class="big bluebtn" style="height:50px;font-size:18px" data-act="newInv">+ ${t.newInvoice}</button>
+    <button class="big blackbtn" style="height:50px;font-size:18px" data-act="newEst" data-v="bills">+ ${t.newEst}</button></div>
+  <div class="stats">
+    <div class="stat c-paid"><small>${t.paidW}</small><b>${whole(tt.pS)}</b></div>
+    <div class="stat c-wait"><small>${t.waitingW}</small><b>${whole(tt.wS)}</b></div>
+    <div class="stat c-over"><small>${t.overdueW}</small><b>${whole(tt.oS)}</b></div>
+  </div>
+  <div class="scroller" style="gap:8px">${f.map(([k,l])=>`<button class="pill ${S.filter===k?'on':''}" data-act="filter" data-v="${k}" aria-pressed="${S.filter===k}" style="flex-shrink:0">${l}</button>`).join('')}</div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    ${list.length?list.map(b=>`<button class="card row" data-act="openBill" data-v="${b.id}" style="${(b.id==='hendersons'||b.id==='oakb')&&b.status!=='paid'?'border:2px solid var(--blue)':''}">
+      <div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px">${b.client}</div>
+        <div style="font-size:13px;font-weight:600">${b.job}</div>
+        <div class="muted" style="font-size:13px">${t.mon(b.d)} · ${lastEv(b,t)}</div></div>
+      <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="h" style="font-size:20px">${money(b.amount)}</span>${isProg(b)?`<span class="muted" style="font-size:12px;font-weight:700">${t.balLeft(whole(b.amount-msPaidSum(b)))}</span>`:''}${stChip(b,t)}</div>
+    </button>`).join(''):`<div class="card muted" style="text-align:center;padding:24px">${t.noBills}</div>`}
+  </div>
+  <button class="big ghost" data-act="copy"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10 H21 M3 15 H21 M9 4 V20 M15 4 V20"/></svg>${t.copy}</button>`}
+</div>${S.toast?`<div class="toast" role="status">${S.toast}</div>`:''}${tabs(t,'bills')}`}
+const evLabel=(k,t)=>({partial:t.ev_partial,progress:t.ev_progress,est:t.ev_est,approved:t.ev_approved,deposit:t.ev_deposit,sent:t.ev_sent,opened:t.ev_opened,reminder:t.ev_reminder,paid:t.ev_paid})[k];
+const lastEv=(b,t)=>{const e=b.ev[b.ev.length-1];return `${evLabel(e[0],t)} ${e[2]}`};
+const methodName=(m,t)=>({apple:t.applePay,google:t.googlePay,bank:t.ach,cash:t.cash,card:t.creditCard})[m]||'';
+
+function progDetail(t,b){
+  const pd=msPaidSum(b), pct=Math.round(pd/b.amount*100);
+  const openM=b.ms.find(m=>m.st==='partial'||m.st==='sent');
+  const msChip=m=>m.st==='paid'?`<span class="chip c-paid" style="font-size:12px;padding:4px 9px">${t.msPaid(m.date)}</span>`:m.st==='partial'?`<span class="chip c-wait" style="font-size:12px;padding:4px 9px">${t.msPartial(whole(m.paid),whole(m.amt))}</span>`:m.st==='sent'?`<span class="chip c-wait" style="font-size:12px;padding:4px 9px">${t.msSent}</span>`:m.st==='ready'?`<span class="chip c-est" style="font-size:12px;padding:4px 9px">${t.msReady}</span>`:`<span class="chip" style="font-size:12px;padding:4px 9px;background:#ECEAE2;color:#5A5850">${t.msLater}</span>`;
+  return `
+<div class="row" style="padding:16px 16px 4px 12px;gap:6px">
+  <button data-act="go" data-v="bills" aria-label="${t.backBills}" style="width:44px;height:44px;border:none;background:none">${icon.back}</button>
+  <span style="font-weight:800">${t.backBills}</span>
+</div>
+<div class="pad" style="padding-top:4px;gap:14px">
+  <div style="border-radius:18px;padding:18px;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;display:flex;flex-direction:column;gap:6px">
+    <div class="between"><span style="font-weight:800;font-size:18px">${b.client}</span>${stChip(b,t)}</div>
+    <span style="font-weight:600;color:#E8E2CC">${b.job} · 4 wks</span>
+    <div class="between" style="margin-top:6px;align-items:flex-end"><div><div style="font-size:12px;font-weight:800;color:var(--sky);text-transform:uppercase;letter-spacing:.06em">${t.paidSoFar}</div><div class="h" style="font-size:38px">${money(pd)}</div></div>
+      <div style="text-align:right"><div style="font-size:12px;font-weight:700;color:#E8E2CC">${t.contract}</div><div class="h" style="font-size:20px">${money(b.amount)}</div></div></div>
+    <div style="height:10px;border-radius:5px;background:#3A3A3A;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--sky)"></div></div>
+    <div class="between" style="font-size:13px;font-weight:700"><span>${pct}%</span><span>${t.balance}: ${money(b.amount-pd)}</span></div>
+  </div>
+  <h2 class="h" style="font-size:22px">${t.paySched.toUpperCase()}</h2>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    ${b.ms.map((m,i)=>`<div class="card" style="display:flex;flex-direction:column;gap:8px;${m.st==='ready'?'border:2px solid var(--blue)':''}">
+      <div class="row"><span class="h" style="width:30px;height:30px;border-radius:15px;background:${m.st==='paid'?'#11643C':m.st==='later'?'#CEC8B6':'var(--blue)'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${m.st==='paid'?icon.check():i+1}</span>
+        <div style="flex:1;min-width:0"><div style="font-weight:800">${t[m.k]}</div><div class="muted" style="font-size:13px">${m.pct}%</div></div><span class="h" style="font-size:20px">${money(m.amt)}</span></div>
+      <div>${msChip(m)}</div>
+      ${m.st==='ready'?`<button class="big bluebtn pulse" style="height:50px;font-size:18px" data-act="sendMs" data-v="${i}">${icon.send('#fff')}${t.sendMs(whole(m.amt))}</button>`:''}
+      ${m.st==='partial'||m.st==='sent'?`<button class="pill" style="align-self:flex-start" data-act="remindMs" data-v="${i}">${t.remindRest(whole(m.amt-m.paid))}</button>`:''}
+    </div>`).join('')}
+  </div>
+  ${openM?`<button class="big ghost" data-act="recordMs">${t.recordPay(whole(openM.amt-openM.paid))}</button>`:''}
+</div>${S.toast?`<div class="toast" role="status">${S.toast}</div>`:''}${tabs(t,'bills')}`}
+
+function billDetail(t){
+  const b=S.bills.find(x=>x.id===S.billId);
+  if(isProg(b)) return progDetail(t,b);
+  const steps=[...b.ev];
+  if(b.status==='estimate') steps.push(['approved',null,null]);
+  if(b.status!=='paid') steps.push(['paid',null,null]);
+  return `
+<div class="row" style="padding:16px 16px 4px 12px;gap:6px">
+  <button data-act="go" data-v="bills" aria-label="${t.backBills}" style="width:44px;height:44px;border:none;background:none">${icon.back}</button>
+  <span style="font-weight:800">${t.backBills}</span>
+</div>
+<div class="pad" style="padding-top:4px;gap:16px">
+  <div class="card" style="padding:18px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;border-top:4px solid var(--blue)">
+    <div class="between" style="width:100%"><span style="font-weight:800;font-size:18px">${b.client}</span>${stChip(b,t)}</div>
+    <span style="font-weight:600">${b.job}</span>
+    <span class="h" style="font-size:42px">${money(b.amount)}</span>
+    <span class="muted" style="font-size:14px">${t.mon(b.d)}${b.deposit?` · ${t.ev_deposit} ${money(b.deposit)}`:''}${b.method?` · ${methodName(b.method,t)}`:''}</span>
+  </div>
+  <div aria-label="History">
+    ${steps.map((e,i)=>{const done=!!e[2];const last=i===steps.length-1;
+      const col=!done?'#CEC8B6':e[0]==='paid'?'#11643C':e[0]==='reminder'?'#A3152A':e[0]==='opened'?'#111111':'#FFC20E';
+      return `<div class="step"><div class="rail"><span class="bead" style="background:${col}">${done?icon.check():''}</span>${last?'':'<span class="stem"></span>'}</div>
+      <div style="padding-top:2px;padding-bottom:12px"><div style="font-weight:800;${done?'':'color:#8E8A78'}">${evLabel(e[0],t)}</div><div class="muted" style="font-size:13px">${done?`${t.mon(e[1])} · ${e[2]}`:t.notYet}</div></div></div>`}).join('')}
+  </div>
+  ${b.status==='estimate'?`<button class="big bluebtn" style="font-size:19px;height:54px" data-act="approve">${t.approveDemo}</button>`:''}
+  ${b.status!=='paid'?`<button class="big ${b.status==='estimate'?'blackbtn':'bluebtn'}" style="font-size:19px;height:54px" data-act="remind">${icon.send('#fff')}${t.remind}</button>`:''}
+  ${b.status!=='paid'&&!isEst(b)?`<button class="big ghost" data-act="cash">${t.markCash}</button>`:''}
+</div>${S.toast?`<div class="toast" role="status">${S.toast}</div>`:''}${tabs(t,'bills')}`}
+
+function clients(t){
+  const list=[['Brooks'],['Carter'],['Kim'],['Lee'],['Nguyen'],['Oak St Rentals',4],['Patel'],['Smith'],['The Hendersons']];
+  return `
+<div class="pad" style="padding-top:24px;gap:12px">
+  <h1 class="h" style="font-size:32px">${t.clients.toUpperCase()}</h1>
+  <button class="big bluebtn" style="font-size:19px;height:auto;min-height:60px;padding:8px;flex-direction:column;gap:0" data-act="go" data-v="signup"><span>+ ${t.invite}</span><span style="font-family:Barlow;font-size:12px;font-weight:600;letter-spacing:0">${t.inviteD}</span></button>
+  ${S.newClient?`<div class="card row" style="border:2px solid var(--blue)"><div class="ico" style="border-radius:22px;background:var(--blue);color:#111111;font-family:'Barlow Condensed';font-weight:800;font-size:18px">${S.newClient.name[0]}</div><div style="flex:1"><div style="font-weight:800">${S.newClient.name}</div><div class="muted" style="font-size:13px">${methodName(S.newClient.method,t)}${S.newClient.auto?' · '+t.autopayTag:''}</div></div><span class="chip c-est">${t.newTag}</span></div>`:''}
+  ${list.map(([n,props])=>{const bs=S.bills.filter(b=>b.client===n);const paid=bs.reduce((x,b)=>x+paidOf(b),0);const owe=bs.reduce((x,b)=>x+oweOf(b),0);
+    return `<div class="card row"><div class="ico" style="border-radius:22px;background:${props?'var(--ink)':'var(--ice)'};color:${props?'#fff':'var(--blueD)'};font-family:'Barlow Condensed';font-weight:800;font-size:18px">${n.replace('The ','')[0]}</div>
+    <div style="flex:1;min-width:0"><div style="font-weight:800">${n}${props?` <span class="tag" style="margin-left:4px">${t.landlord}</span>`:''}</div><div class="muted" style="font-size:13px">${props?t.props(props)+' · ':''}${t.totalPaid}: ${money(paid)}</div></div>${owe?`<span class="chip c-wait">${t.owes} ${whole(owe)}</span>`:''}</div>`}).join('')}
+</div>${tabs(t,'clients')}`}
+
+function bill(t){return `
+<div class="row" style="padding:16px 16px 4px 12px;gap:6px">
+  <button data-act="go" data-v="today" aria-label="${t.back}" style="width:44px;height:44px;border:none;background:none">${icon.back}</button>
+  <h1 class="h" style="font-size:28px">${t.newBill.toUpperCase()}</h1>
+</div>
+<div class="pad" style="padding-top:4px;gap:14px">
+  <div class="card row"><div class="ico" style="border-radius:22px;background:var(--ink);color:#fff;font-family:'Barlow Condensed';font-weight:800;font-size:18px">${cur().ini}</div><div style="flex:1"><div class="muted" style="font-size:12px;font-weight:700">${t.billTo}</div><div style="font-weight:800">${cur().client}</div><div class="muted" style="font-size:13px">${t[cur().jobKey]}</div></div><button data-act="switchBill" style="border:none;background:none;color:#8A6500;font-weight:800;font-size:14px;min-height:44px">${t.change}</button></div>
+  <div class="card between" style="padding:10px 14px"><div><div style="font-weight:800;font-size:15px">${t.labor}</div><div class="muted" style="font-size:13px">${t.hoursAt(RATE)}</div><div style="margin-top:6px">${rateChip(t)}</div></div>
+    <div class="row" style="gap:10px"><div class="stepper"><button data-act="hrs" data-v="-1" aria-label="−">−</button><b>${S.hours}</b><button data-act="hrs" data-v="1" aria-label="+">+</button></div></div></div>
+  <div style="display:flex;flex-direction:column;gap:8px"><h2 style="margin:0;font-size:15px">${t.materials} <span class="muted" style="font-weight:600">· ${t.tapToggle}</span></h2>
+    ${cur().mats.map(m=>`<button class="mat ${S.mats[m.id]?'on':''}" data-act="mat" data-v="${m.id}" aria-pressed="${!!S.mats[m.id]}"><span class="box">${S.mats[m.id]?icon.check():''}</span><span style="flex:1;font-weight:700;${S.mats[m.id]?'':'color:#8E8A78;text-decoration:line-through'}">${t[m.id]}</span><span class="h" style="font-size:18px">$${m.price}</span></button>`).join('')}
+  </div>
+  <div class="card" style="padding:10px 14px;display:flex;flex-direction:column;gap:10px">
+    <div class="row"><div style="flex:1"><div style="font-weight:800;font-size:15px">${t.addPhotos}</div><div class="muted" style="font-size:13px">${t.addPhotosD}</div></div><button class="switch ${S.photos?'on':''}" role="switch" aria-checked="${S.photos}" aria-label="${t.addPhotos}" data-act="photos"><span></span></button></div>
+    ${S.photos?`<div class="photos"><div class="photo">${photoSvg(false,cur().photo)}<span>${t.before}</span></div><div class="photo">${photoSvg(true,cur().photo)}<span>${t.after}</span></div></div>`:''}
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:6px">
+    <div class="line"><span>${t.jobTotal}</span><b>${money(sub())}</b></div>
+    ${cur().deposit?`<div class="line" style="color:#11643C"><span>${t.deposit}</span><b>−${money(cur().deposit)}</b></div>`:''}
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px"><label for="note" style="font-size:15px;font-weight:800">${t.note}</label><textarea id="note" rows="3">${t.noteText}</textarea></div>
+</div>
+<div class="foot"><div><div class="muted" style="font-size:13px;font-weight:700">${t.due}</div><div class="h" style="font-size:30px;line-height:1">${money(due())}</div></div>
+  <button class="big bluebtn pulse" style="flex:1;height:56px;font-size:19px" data-act="send">${icon.send('#fff')}${t.textBill}</button></div>
+${S.sent?`<div class="sheetWrap"><div class="sheet" role="dialog" aria-label="${t.sent}">${conf()}
+  <div style="width:72px;height:72px;border-radius:36px;background:var(--blue);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 8px var(--ice)"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 L10 14"/><path d="M21 3 L14 21 L10 14 L3 10 Z"/></svg></div>
+  <h2 class="h" style="font-size:32px">${t.sent.toUpperCase()}</h2><p class="muted" style="margin:0;font-size:16px">${t.sentMsg(money(due()),cur().client)}</p>
+  <button class="big pulse blackbtn" style="font-size:19px;height:54px;margin-top:8px" data-act="go" data-v="client">${t.seeThem}</button>
+  <button class="link" data-act="go" data-v="today">${t.back}</button></div></div>`:''}`}
+
+function client(t){
+  const items=[[`${t.labor} (${S.hours} hrs)`,S.hours*RATE],...cur().mats.filter(m=>S.mats[m.id]).map(m=>[t[m.id],m.price])];
+  const methods=[['apple'],['google'],['card'],['bank']];
+  return `
+<div class="pad" style="padding-top:22px;gap:14px">
+  <div class="row" style="gap:10px">${icon.logo}<div><div style="font-weight:800">${t.biz}</div><div class="muted" style="font-size:13px">${t.date}</div></div></div>
+  <h1 class="h" style="font-size:36px">${t.doneH}</h1>
+  ${S.photos?`<div class="photos"><div class="photo">${photoSvg(false,cur().photo)}<span>${t.before}</span></div><div class="photo">${photoSvg(true,cur().photo)}<span>${t.after}</span></div></div>`:''}
+  <div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+    <div class="tag">${t[cur().jobKey]}</div>
+    ${items.map(([n,p])=>`<div class="line"><span>${n}</span><b>${money(p)}</b></div>`).join('')}
+    <div style="border-top:2px dashed var(--line)"></div>
+    <div class="line"><span>${t.subtotal}</span><b>${money(sub())}</b></div>
+    ${cur().deposit?`<div class="line" style="color:#11643C"><span>${t.deposit}</span><b>−${money(cur().deposit)}</b></div>`:''}
+  </div>
+  <div class="between"><span style="font-weight:800;font-size:17px">${t.due}</span><span class="h" style="font-size:38px">${money(due())}</span></div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <button data-act="pay" data-v="apple" style="height:56px;border-radius:14px;border:none;background:#000;color:#fff;font-family:-apple-system,'Barlow',sans-serif;font-weight:700;font-size:18px">${t.apple}</button>
+    <button data-act="pay" data-v="google" style="height:56px;border-radius:14px;border:2px solid #DADCE0;background:#fff;font-weight:800;font-size:17px">${t.gpay}</button>
+    <button data-act="pay" data-v="card" style="height:56px;border-radius:14px;border:2px solid var(--ink);background:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;gap:10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10 H21.5 M6 15 H10"/></svg>${t.ccard}</button>
+    <button data-act="pay" data-v="bank" style="min-height:56px;border-radius:14px;border:none;background:var(--blue);color:#111111;font-weight:800;font-size:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px"><span>${t.bankPay}</span><span style="font-size:12px;font-weight:600;color:#5A4A00">${t.bankD}</span></button>
+    <div class="muted" style="text-align:center;font-size:13px">${t.secure}</div>
+  </div>
+</div>`}
+
+function clientPaid(t){const msg={apple:t.paidApple,google:t.paidGoogle,bank:t.paidBank,card:t.paidCC}[S.method];return `
+<div class="pad" style="align-items:center;justify-content:center;text-align:center;position:relative;padding:40px 28px">${conf()}
+  <div style="width:108px;height:108px;border-radius:54px;background:var(--blue);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 10px var(--ice)"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 L10 17.5 L19 7"/></svg></div>
+  <h1 class="h" style="font-size:42px;margin-top:12px">${t.thanksH}</h1>
+  <div class="h" style="font-size:28px;color:var(--blue)">${t.paidAmt(money(due()))}</div>
+  <p class="muted" style="margin:0;font-size:16px">${msg} ${t.news}</p>
+  <button class="big blackbtn" style="margin-top:14px;font-size:18px">★ ${t.review}</button>
+  <button class="link pulse" data-act="go" data-v="paid">${t.seeMarcus} →</button>
+</div>`}
+
+function paid(t){return `
+<div style="background:linear-gradient(180deg,var(--ink) 0%,var(--navy2) 100%);color:#fff;flex:1;display:flex;flex-direction:column;position:relative">${conf()}
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:56px 24px 0;text-align:center">
+    <h1 class="h" style="font-size:64px;color:var(--sky);line-height:1;letter-spacing:.06em">${t.paidBig}</h1>
+    <p style="margin:6px 0 0;font-size:17px;font-weight:700">${t.paidYou(cur().client)}</p>
+    <div class="h" style="font-size:62px;line-height:1">${money(due())}</div>
+    <div style="margin-top:24px;width:100%;background:#fff;color:var(--ink);border-radius:18px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;text-align:left">
+      <div class="line"><span>${t.jobTotal}</span><b>${money(sub())}</b></div>
+      ${cur().deposit?`<div class="line muted"><span>${t.depositW}</span><b>${money(cur().deposit)}</b></div>`:''}
+      <div class="line"><span>${t.todayW}</span><b style="color:var(--blueD)">${money(due())}</b></div>
+      <div style="border-top:2px dashed var(--line)"></div>
+      <div class="line muted" style="font-size:14px"><span>${t.paidWith}</span><b>${methodName(S.method,t)}</b></div>
+      <div class="line muted" style="font-size:14px"><span>${t.goesTo}</span><b>${t.bank}</b></div>
+    </div>
+  </div>
+  <div style="padding:24px 24px 30px;display:flex;flex-direction:column;gap:6px">
+    <button class="big bluebtn" style="font-size:19px">${t.thanks}</button>
+    <button class="link pulse" style="color:var(--sky)" data-act="go" data-v="today">${t.back}</button>
+  </div>
+</div>`}
+
+function signup(t){
+  const opts=[['bank',t.ach],['apple',t.applePay],['google',t.googlePay],['card',t.creditCard]];
+  const inp='width:100%;min-height:48px;border:1px solid var(--line2);border-radius:12px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--ink);background:#fff';
+  return `
+<div class="pad" style="padding-top:22px;gap:14px">
+  <div class="row" style="gap:10px">${icon.logo}<div style="font-weight:800">${t.invited}</div></div>
+  <h1 class="h" style="font-size:32px">${t.joinTitle}</h1>
+  <form id="su" style="display:flex;flex-direction:column;gap:12px" onsubmit="return false">
+    <label style="font-weight:800;font-size:14px;display:flex;flex-direction:column;gap:4px">${t.yourName}<input id="suName" style="${inp}" value="Jordan Ellis" autocomplete="name"></label>
+    <label style="font-weight:800;font-size:14px;display:flex;flex-direction:column;gap:4px">${t.phone}<input style="${inp}" value="(919) 555-0142" inputmode="tel"></label>
+    <label style="font-weight:800;font-size:14px;display:flex;flex-direction:column;gap:4px">${t.address}<input style="${inp}" value="418 Laurel Hill Rd, Raleigh"></label>
+    <div style="font-weight:800;font-size:14px">${t.howPay}</div>
+    <div style="display:flex;flex-direction:column;gap:8px">${opts.map(([k,l])=>`<button type="button" class="opt ${S.suMethod===k?'on':''}" data-act="suMethod" data-v="${k}" aria-pressed="${S.suMethod===k}"><span class="dot"></span><span style="font-weight:800">${l}</span></button>`).join('')}</div>
+    <div class="card row" style="padding:10px 14px"><div style="flex:1"><div style="font-weight:800;font-size:14px">${t.autopay}</div><div class="muted" style="font-size:12px">${t.autopayD}</div></div><button type="button" class="switch ${S.suAuto?'on':''}" role="switch" aria-checked="${S.suAuto}" aria-label="${t.autopay}" data-act="suAuto"><span></span></button></div>
+    <button type="button" class="big bluebtn" data-act="join">${t.join}</button>
+    <div class="muted" style="text-align:center;font-size:13px">${t.noAcct}</div>
+  </form>
+</div>`}
+function signupDone(t){return `
+<div class="pad" style="align-items:center;justify-content:center;text-align:center;position:relative;padding:40px 28px">${conf()}
+  <div style="width:108px;height:108px;border-radius:54px;background:var(--blue);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 10px var(--ice)"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 L10 17.5 L19 7"/></svg></div>
+  <h1 class="h" style="font-size:40px;margin-top:12px">${t.joined}</h1>
+  <p class="muted" style="margin:0;font-size:16px">${t.joinedMsg}</p>
+  <button class="big blackbtn pulse" style="margin-top:14px;font-size:19px" data-act="go" data-v="clients">${t.seeClients}</button>
+</div>`}
+function crew(t){
+  const isSub=S.crewTab==='subs';
+  return `
+<div class="pad" style="padding-top:24px;gap:14px">
+  <h1 class="h" style="font-size:32px">${t.tCrew.toUpperCase()}</h1>
+  <div class="segw" role="group"><button class="${isSub?'':'on'}" data-act="crewTab" data-v="emp">${t.empTab}</button><button class="${isSub?'on':''}" data-act="crewTab" data-v="subs">${t.subTab}</button></div>
+  ${isSub?subsView(t):empView(t)}
+</div>${S.sheet?sheetView(t):''}${S.toast?`<div class="toast" role="status">${S.toast}</div>`:''}${tabs(t,'crew')}`}
+
+function empView(t){
+  const jobsToday=['Kim','The Hendersons','Oak St Rentals'];
+  const others=S.emps.filter(e=>e.id!=='marcus');
+  const payroll=others.reduce((x,e)=>x+e.rate*e.wk,0);
+  const onNow=others.filter(e=>e.on).length+(S.clock.on?1:0);
+  const me=S.emps.find(e=>e.id==='marcus');
+  return `
+  <div style="border-radius:18px;padding:16px;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;display:flex;flex-direction:column;gap:12px">
+    <div class="between"><span style="font-size:13px;font-weight:800;color:var(--sky);text-transform:uppercase;letter-spacing:.06em">${t.yourClock}</span>
+      <span class="row" style="gap:6px;font-size:13px;font-weight:700"><span class="${S.clock.on?'live':'off'}"></span>${S.clock.on?t.onClock:t.offClock}</span></div>
+    ${S.clock.on?`<div><div class="timer" data-timer style="font-size:52px;line-height:1">${hms(Date.now()-S.clock.start)}</div><div style="font-weight:700;color:#E8E2CC">${S.clock.job}</div></div>
+      <button class="big" style="background:#fff;color:var(--ink);box-shadow:0 4px 0 #BDB49A" data-act="clockOut">${icon.clock('#111111')}${t.clockOut.toUpperCase()}</button>`
+    :`<div><div style="font-size:14px;font-weight:700;margin-bottom:8px">${t.pickJob}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">${jobsToday.map(j=>`<button class="pill" data-act="clockJob" data-v="${j}" aria-pressed="${S.clock.job===j}" style="${S.clock.job===j?'background:var(--blue);border-color:var(--blue);color:#111111':'background:transparent;border-color:#6E6A58;color:#fff'}">${j}</button>`).join('')}</div></div>
+      <button class="big bluebtn pulse" data-act="clockIn">${icon.clock('#fff')}${t.clockIn.toUpperCase()}</button>
+      <div style="font-size:13px;color:#E8E2CC">${t.weekHrs(me.wk.toFixed(1))} · ${t.lastOut(me.last)}</div>`}
+  </div>
+  <div class="stats" style="grid-template-columns:1fr 1fr">
+    <div class="stat c-est"><small>${t.onNow}</small><b>${onNow}</b></div>
+    <div class="stat" style="background:#ECEAE2"><small>${t.payroll}</small><b>${whole(payroll)}</b></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    ${others.map(e=>`<div class="card row">
+      <span class="av" style="background:${e.c};width:44px;height:44px;border-radius:22px;font-size:20px">${e.n[0]}</span>
+      <div style="flex:1;min-width:0"><div style="font-weight:800">${e.n} <span class="tag" style="margin-left:4px">${t[e.role]||e.role}</span></div>
+        <div class="row" style="gap:6px;font-size:13px;margin-top:2px"><span class="${e.on?'live':'off'}"></span><span class="muted">${e.on?`${e.job} · ${t.since(e.since)}`:e.invited?t.invPend:t.lastOut(e.last)}</span></div></div>
+      <div style="text-align:right"><div class="h" style="font-size:20px">${e.wk.toFixed(1)}h</div><div class="muted" style="font-size:12px;font-weight:700">${t.perHr(e.rate)}</div></div>
+    </div>`).join('')}
+  </div>
+  <button class="big blackbtn" style="font-size:19px;height:auto;min-height:58px;padding:8px;flex-direction:column;gap:0" data-act="sheet" data-v="emp"><span>+ ${t.addEmp}</span><span style="font-family:Barlow;font-size:12px;font-weight:600;letter-spacing:0">${t.addEmpD}</span></button>
+  <button class="big ghost" data-act="copyTime">${icon.clock('#111111')}${t.copyTime}</button>`}
+
+function subsView(t){
+  const owed=S.subs.reduce((x,s)=>x+s.owed,0), ytd=S.subs.reduce((x,s)=>x+s.ytd,0), alerts=S.subs.filter(s=>s.coi!=='ok').length;
+  const coi=s=>s.coi==='ok'?`<span class="chip c-paid" style="font-size:12px;padding:4px 9px">${t.coiOk(s.coiDate)}</span>`:s.coi==='soon'?`<span class="chip c-wait" style="font-size:12px;padding:4px 9px">${t.coiSoon(s.coiDate)}</span>`:s.coi==='none'?`<span class="chip c-wait" style="font-size:12px;padding:4px 9px">${t.coiNone}</span>`:`<span class="chip c-over" style="font-size:12px;padding:4px 9px">${t.coiExp(s.coiDate)}</span>`;
+  return `
+  <div class="stats">
+    <div class="stat c-wait"><small>${t.subsOwed}</small><b>${whole(owed)}</b></div>
+    <div class="stat c-est"><small>${t.subsYtd}</small><b>${whole(ytd)}</b></div>
+    <div class="stat ${alerts?'c-over':'c-paid'}"><small>${t.alerts}</small><b>${alerts}</b></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    ${S.subs.map(s=>`<div class="card" style="display:flex;flex-direction:column;gap:8px;${s.coi==='expired'?'border:2px solid #E3A0A8':''}">
+      <div class="row"><div class="ico" style="background:var(--ink);color:#fff;font-family:'Barlow Condensed';font-weight:800;font-size:18px">${s.n[0]}</div>
+        <div style="flex:1;min-width:0"><div style="font-weight:800">${s.n}</div><div class="muted" style="font-size:13px">${t[s.trade]||s.trade} · ${s.job||t.notAssigned}</div></div>
+        ${s.owed?`<span class="h" style="font-size:20px">${whole(s.owed)}</span>`:''}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${coi(s)}<span class="chip ${s.w9?'c-paid':'c-over'}" style="font-size:12px;padding:4px 9px">${s.w9?t.w9ok:t.w9no}</span></div>
+      <div class="muted" style="font-size:13px">${t.ytd1099(whole(s.ytd))}</div>
+      ${(s.owed||s.coi!=='ok'||!s.w9)?`<div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${s.owed?`<button class="pill" style="background:var(--blue);border-color:var(--blue);color:#111111" data-act="paySub" data-v="${s.id}">${t.paySub(whole(s.owed))}</button>`:''}
+        ${s.coi!=='ok'?`<button class="pill" data-act="reqSub" data-v="${s.id}">${t.reqCoi}</button>`:''}
+        ${!s.w9&&s.coi==='ok'?`<button class="pill" data-act="reqSub" data-v="${s.id}">${t.reqDocs}</button>`:''}
+      </div>`:''}
+    </div>`).join('')}
+  </div>
+  <button class="big blackbtn" style="font-size:19px;height:auto;min-height:58px;padding:8px;flex-direction:column;gap:0" data-act="sheet" data-v="sub"><span>+ ${t.addSub}</span><span style="font-family:Barlow;font-size:12px;font-weight:600;letter-spacing:0">${t.addSubD}</span></button>`}
+
+function sheetView(t){
+  const emp=S.sheet==='emp';
+  const lab='font-weight:800;font-size:14px;display:flex;flex-direction:column;gap:4px;text-align:left;width:100%';
+  return `<div class="sheetWrap"><form class="sheet" style="align-items:stretch;text-align:left;gap:12px" data-form="${S.sheet}" onsubmit="return false">
+    <h2 class="h" style="font-size:28px">${(emp?t.addEmp:t.addSub).toUpperCase()}</h2>
+    ${emp?`<label style="${lab}">${t.name}<input class="fld" id="fA" value="Carlos" autocomplete="off"></label>
+      <label style="${lab}">${t.role}<input class="fld" id="fB" value="${t.r_help}"></label>
+      <label style="${lab}">${t.rate}<input class="fld" id="fC" value="24" inputmode="decimal"></label>`
+    :`<label style="${lab}">${t.company}<input class="fld" id="fA" value="Wake Tile & Stone" autocomplete="off"></label>
+      <label style="${lab}">${t.trade}<input class="fld" id="fB" value="Tile"></label>`}
+    <label style="${lab}">${t.phone}<input class="fld" value="(919) 555-0107" inputmode="tel"></label>
+    <button type="button" class="big bluebtn" data-act="addPerson">${icon.send('#fff')}${emp?t.sendInvite:t.addSub}</button>
+    <button type="button" class="link" data-act="sheet" data-v="">${t.cancel}</button>
+  </form></div>`}
+
+
+const boardLen=x=>[8,10,12,14,16].find(n=>n>=x)||16;
+const JOISTP={8:13.48,10:16.98,12:19.98,14:24.98,16:28.98};
+const C=Math.ceil;
+function calcEst(){
+  const e=S.est, d=e.dims, it=[];
+  const add=(k,qty,price,arg)=>{if(qty>0)it.push({k,qty,price,arg})};
+  let hrs=0, size='sq';
+  if(e.type==='deck'){ // lawn mowing, per month
+    const A=Math.max(1000,d.L||0), V=Math.max(1,Math.round(d.W||1)), per=Math.max(0.5,Math.round((A/9000+(e.edge?0.25:0))*4)/4);
+    add('m_fuel',V,3.5); if(e.edge) add('m_line',1,12);
+    hrs=per*V; e.area=A; e.per=per;
+  } else if(e.type==='drywall'){ // mulch beds
+    const A=Math.max(10,d.L||0), D=Math.max(1,d.H||3), yd=C(A*D/12/27*1.05);
+    add('m_mulch',yd,42,D); add('m_deliv',1,65); add('m_preem',C(A/1000),22); if(e.fabric) add('m_fabric',C(A/300),34);
+    hrs=yd*1+A/400; e.area=A;
+  } else if(e.type==='paint'){ // sod
+    const L=Math.max(1,d.L||0), W=Math.max(1,d.W||0), A=L*W;
+    add('m_sod',C(A*1.05/450),285); add('m_starter',C(A/5000),38); if(e.prep) add('m_topsoil',C(A/300),45);
+    hrs=A/120+(e.prep?A/400:0); e.area=A;
+  } else { // leaf cleanup
+    const A=Math.max(1000,d.Len||0), k=e.heavy?1.6:1;
+    add('m_bagbox',C(A/5000*k),28); add('m_dump',C(A/10000*k),45);
+    hrs=A/2000*k+0.5; e.area=A;
+  }
+  hrs=Math.round(hrs*2)/2;
+  const mat=it.reduce((x,i)=>x+i.qty*i.price,0), mk=mat*e.markup/100, labor=hrs*RATE;
+  return {it,hrs,mat,mk,labor,total:Math.round(mat+mk+labor),size};
+}
+const EDEF={deck:{L:9000,W:4},drywall:{L:450,H:3},paint:{L:40,W:30},fence:{Len:12000}};
+const itemName=(i,t)=>typeof t[i.k]==='function'?t[i.k](i.arg):t[i.k];
+const PHOTOS={deck:{type:'deck',dims:{L:9500,W:4},flags:{edge:true}},
+  wall:{type:'drywall',dims:{L:420,H:3},flags:{fabric:false}},
+  fence:{type:'fence',dims:{Len:14000},flags:{heavy:true}}};
+const samplePhoto=k=>k==='deck'?`<svg viewBox="0 0 160 110" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="160" height="110" fill="#BFD7EE"/><rect x="92" y="18" width="58" height="42" fill="#E8E2D6"/><path d="M88 20 L121 4 L154 20 Z" fill="#7A5C44"/><rect x="114" y="38" width="12" height="22" fill="#6B5B48"/><rect y="56" width="160" height="54" fill="#5E9B3A"/>${[0,1,2,3,4,5,6,7].map(i=>`<rect x="${i*20}" y="56" width="10" height="54" fill="#6FAF45"/>`).join('')}<circle cx="24" cy="44" r="16" fill="#3F7A2A"/><rect x="22" y="52" width="4" height="10" fill="#5A4630"/></svg>`
+ :k==='wall'?`<svg viewBox="0 0 160 110" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="160" height="110" fill="#E5DFD2"/><rect y="0" width="160" height="50" fill="#D8CFC0"/><rect y="50" width="160" height="60" fill="#6FAF45"/><path d="M0 62 Q80 48 160 62 V88 Q80 100 0 88 Z" fill="#7A5A3C"/>${[18,48,80,112,142].map(x=>`<circle cx="${x}" cy="70" r="11" fill="#4E8B33"/><circle cx="${x+4}" cy="66" r="4" fill="#C93C6A"/>`).join('')}${[30,64,96,128].map(x=>`<path d="M${x} 84 l3 -8 l3 8" stroke="#8FBF5A" stroke-width="2" fill="none"/>`).join('')}</svg>`
+ :`<svg viewBox="0 0 160 110" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="160" height="110" fill="#C9DCEB"/><rect y="52" width="160" height="58" fill="#7FA35F"/><rect x="14" y="10" width="10" height="48" fill="#5A4630"/><circle cx="19" cy="14" r="20" fill="#C9692A"/>${Array.from({length:70},(_, i)=>`<ellipse cx="${(i*37)%160}" cy="${56+((i*23)%52)}" rx="3.4" ry="2" fill="${['#D9822B','#B5451B','#E0A030','#8C3A12'][i%4]}" transform="rotate(${(i*47)%180} ${(i*37)%160} ${56+((i*23)%52)})"/>`).join('')}</svg>`;
+
+function estimator(t){
+  const e=S.est;
+  const types=[['deck',t.pt_deck],['drywall',t.pt_drywall],['paint',t.pt_paint],['fence',t.pt_fence]];
+  const num=(k,l)=>`<label style="font-weight:800;font-size:13px;display:flex;flex-direction:column;gap:4px">${l}<input class="fld" type="number" inputmode="decimal" min="0" data-dim="${k}" value="${e.dims[k]}"></label>`;
+  const sw=(k,l)=>`<div class="card row" style="padding:8px 14px"><div style="flex:1;font-weight:800;font-size:15px">${l}</div><button class="switch ${e[k]?'on':''}" role="switch" aria-checked="${!!e[k]}" aria-label="${l}" data-act="estOpt" data-v="${k}"><span></span></button></div>`;
+  const fields=e.type==='deck'?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${num('L',t.d_lawn)}${num('W',t.d_visits)}</div>${sw('edge',t.o_edge)}${e.per?`<div class="muted" style="font-size:13px;font-weight:700">${t.perVisit(e.per,whole(e.per*RATE))}</div>`:''}`
+    :e.type==='drywall'?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${num('L',t.d_bed)}${num('H',t.d_depth)}</div>${sw('fabric',t.o_fabric)}`
+    :e.type==='paint'?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${num('L',t.d_sL)}${num('W',t.d_sW)}</div>${sw('prep',t.o_prep)}`
+    :`${num('Len',t.d_yard)}${sw('heavy',t.o_heavy)}`;
+  return `
+<div class="row" style="padding:16px 16px 4px 12px;gap:6px">
+  <button data-act="go" data-v="${e.back||'today'}" aria-label="${t.back}" style="width:44px;height:44px;border:none;background:none">${icon.back}</button>
+  <h1 class="h" style="font-size:28px">${t.newEst.toUpperCase()}</h1>
+</div>
+<div class="pad" style="padding-top:4px;gap:14px">
+  <div style="border-radius:18px;padding:14px;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;display:flex;flex-direction:column;gap:10px">
+    <div class="row" style="gap:10px">${icon.camera}<div><div style="font-weight:800">${t.fromPhoto}</div><div style="font-size:13px;color:#E8E2CC">${t.fromPhotoD}</div></div></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${['deck','wall','fence'].map(k=>`<button data-act="estPhoto" data-v="${k}" style="padding:0;border:3px solid ${e.fromPhoto===k?'var(--sky)':'transparent'};border-radius:12px;overflow:hidden;background:none;position:relative;aspect-ratio:4/3" aria-label="${t['ph_'+k]}">${samplePhoto(k)}<span style="position:absolute;left:4px;bottom:4px;background:rgba(10,15,26,.8);color:#fff;font-size:10px;font-weight:800;padding:2px 6px;border-radius:999px">${t['ph_'+k]}</span></button>`).join('')}</div>
+    <div style="font-size:12px;color:#BDB49A">${t.demoPhotos}</div>
+  </div>
+  ${e.fromPhoto?`<div class="chip c-est" style="white-space:normal;text-align:center">✦ ${t.aiGuess}</div>`:''}
+  <div><h2 style="margin:0 0 8px;font-size:15px">${t.whatBuild}</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${types.map(([k,l])=>`<button class="pill ${e.type===k?'on':''}" data-act="estType" data-v="${k}" aria-pressed="${e.type===k}" style="border-radius:12px">${l}</button>`).join('')}</div></div>
+  <div style="display:flex;flex-direction:column;gap:10px"><h2 style="margin:0;font-size:15px">${t.dims}</h2>${fields}</div>
+  <div id="estOut">${estOut(t)}</div>
+</div>
+${e.reading?`<div class="sheetWrap" style="align-items:center;justify-content:center"><div style="background:#fff;border-radius:18px;padding:22px;width:260px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center">
+  <div style="width:100%;border-radius:12px;overflow:hidden;aspect-ratio:4/3;position:relative">${samplePhoto(e.reading)}<div class="scan"></div></div>
+  <div class="h" style="font-size:22px">${t.reading}</div></div></div>`:''}
+${S.toast?`<div class="toast" role="status">${S.toast}</div>`:''}`}
+
+function estOut(t){
+  const r=calcEst(), e=S.est;
+  return `<div style="display:flex;flex-direction:column;gap:12px">
+  <div class="between"><h2 style="margin:0;font-size:15px">${t.matList}</h2><span class="tag">${r.size==='sq'?t.sqft(e.area):t.lft(e.area)}</span></div>
+  <div class="card" style="padding:4px 14px">
+    ${r.it.map(i=>`<div class="line" style="padding:9px 0;border-bottom:1px solid var(--line);font-size:14px"><span><b class="h" style="font-size:17px;display:inline-block;min-width:30px">${i.qty}</b> ${itemName(i,t)}</span><b>${whole(i.qty*i.price)}</b></div>`).join('')}
+    <div class="line" style="padding:10px 0;font-weight:800"><span>${t.matSub}</span><span>${money(r.mat)}</span></div>
+  </div>
+  <div><div style="font-weight:800;font-size:14px;margin-bottom:6px">${t.markup}</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">${[0,10,15,20].map(m=>`<button class="pill ${e.markup===m?'on':''}" data-act="estMk" data-v="${m}" aria-pressed="${e.markup===m}">${m}%</button>`).join('')}</div></div>
+  <div class="card" style="display:flex;flex-direction:column;gap:6px">
+    <div class="line"><span>${t.matSub}</span><b>${money(r.mat)}</b></div>
+    ${r.mk?`<div class="line"><span>${t.markup} (${e.markup}%)</span><b>${money(r.mk)}</b></div>`:''}
+    <div class="line"><span>${t.laborEst(r.hrs)}</span><b>${money(r.labor)}</b></div>
+    <div>${rateChip(t)}</div>
+    <div style="border-top:2px dashed var(--line)"></div>
+    <div class="between"><span style="font-weight:800">${t.estTotal}</span><span class="h" style="font-size:32px">${whole(r.total)}</span></div>
+  </div>
+  <div class="muted" style="font-size:12px;text-align:center">${t.priceNote}</div>
+  <label style="font-weight:800;font-size:14px;display:flex;flex-direction:column;gap:4px">${t.customer}<input class="fld" data-estclient value="${e.client}"></label>
+  <button class="big bluebtn" data-act="sendEst">${icon.send('#fff')}${t.sendEst}</button>
+  <button class="big ghost" data-act="copyMats">${t.copyMats}</button>
+  </div>`}
+
+const CATS=['c_mat','c_sub','c_pay','c_fuel','c_tools','c_over','c_other'];
+const CATCOL={c_mat:'#FFC20E',c_sub:'#111111',c_pay:'#4E6B2F',c_fuel:'#6B8E23',c_tools:'#FFD54A',c_over:'#AAA592',c_other:'#D3CFC2'};
+const PJOBS=['The Hendersons','Brooks','Oak St Rentals','Kim'];
+function seedExp(){return [
+  {v:'Liability insurance',cat:'c_over',job:null,amt:312,d:1},
+  {v:'Triangle Stone & Mulch',cat:'c_mat',job:'Brooks',amt:2840.16,d:3},
+  {v:'Triangle Tree Service',cat:'c_sub',job:'Oak St Rentals',amt:1200,d:6},
+  {v:'Payroll — week 1',cat:'c_pay',job:null,amt:3480,d:7},
+  {v:'Corner Hardware',cat:'c_tools',job:null,amt:129.99,d:8},
+  {v:'Quick Fuel #214',cat:'c_fuel',job:null,amt:86.40,d:10},
+  {v:'Corner Hardware',cat:'c_tools',job:null,amt:88.35,d:12},
+  {v:'Quick Fuel #214',cat:'c_fuel',job:null,amt:74.12,d:13},
+  {v:'Payroll — week 2',cat:'c_pay',job:null,amt:3612,d:14},
+  {v:'Triangle Stone & Mulch',cat:'c_mat',job:'The Hendersons',amt:401.00,d:14}
+];}
+const RCPTS={
+  lumber:{v:'Triangle Stone & Mulch',cat:'c_mat',job:'The Hendersons',amt:366.15,tax:24.15,d:15,lines:[['HARDWOOD MULCH YD',6,42.00],['PINE STRAW BALE',10,6.50],['DELIVERY',1,25.00]]},
+  fuel:{v:'Quick Fuel #214',cat:'c_fuel',job:null,amt:68.20,tax:0,d:15,lines:[['UNLEADED 18.9 GAL',1,68.20]]},
+  hw:{v:'Corner Hardware',cat:'c_tools',job:null,amt:61.92,tax:4.06,d:15,lines:[['TRIMMER LINE .095',2,14.98],['MOWER BLADE 21IN',1,22.98],['SPARK PLUG',2,1.96]]}
+};
+const rcptSvg=k=>{const r=RCPTS[k];return `<svg viewBox="0 0 120 150" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" aria-hidden="true" style="background:#3B4658">
+  <path d="M18 6 H102 V140 L96 144 L90 140 L84 144 L78 140 L72 144 L66 140 L60 144 L54 140 L48 144 L42 140 L36 144 L30 140 L24 144 L18 140 Z" fill="#FBFAF6" transform="rotate(-3 60 75)"/>
+  <g transform="rotate(-3 60 75)" font-family="monospace" fill="#2A2A2A"><text x="60" y="20" font-size="7" text-anchor="middle" font-weight="bold">${r.v.toUpperCase().slice(0,22)}</text><text x="60" y="28" font-size="4.5" text-anchor="middle">RALEIGH NC · 11/15/26</text>
+  ${r.lines.map((l,i)=>`<text x="24" y="${42+i*9}" font-size="4.5">${l[0]}</text><text x="96" y="${42+i*9}" font-size="4.5" text-anchor="end">${(l[1]*l[2]).toFixed(2)}</text>`).join('')}
+  <text x="24" y="${50+r.lines.length*9}" font-size="4.5">TAX</text><text x="96" y="${50+r.lines.length*9}" font-size="4.5" text-anchor="end">${r.tax.toFixed(2)}</text>
+  <text x="24" y="${60+r.lines.length*9}" font-size="6" font-weight="bold">TOTAL</text><text x="96" y="${60+r.lines.length*9}" font-size="6" font-weight="bold" text-anchor="end">${r.amt.toFixed(2)}</text></g></svg>`};
+const incomeOf=job=>S.bills.filter(b=>!job||b.client===job).reduce((x,b)=>x+paidOf(b),0);
+const PRIOR_INC=12480; // invoices paid Nov 1–8, before the demo week
+function pnlData(){const inc=incomeOf(null)+PRIOR_INC, byCat={}; CATS.forEach(c=>byCat[c]=0); S.exp.forEach(e=>byCat[e.cat]+=e.amt);
+  const out=S.exp.reduce((x,e)=>x+e.amt,0); return {inc,out,net:inc-out,byCat}}
+
+function pnl(t){
+  const P=pnlData(), mx=Math.max(P.inc,P.out,1), mg=P.inc?Math.round(P.net/P.inc*100):0;
+  const recent=S.exp.slice().sort((a,b)=>b.d-a.d).slice(0,5);
+  return `
+  <div style="border-radius:18px;padding:18px;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;display:flex;flex-direction:column;gap:10px">
+    <div class="between"><span style="font-size:13px;font-weight:800;color:var(--sky);text-transform:uppercase;letter-spacing:.06em">${t.netProfit} · ${t.month}</span><span class="chip" style="background:${P.net>=0?'#DCF3E6':'#FDE2E4'};color:${P.net>=0?'#11643C':'#A3152A'}">${t.margin(mg)}</span></div>
+    <div class="h" style="font-size:48px;line-height:1">${P.net<0?'−':''}${money(Math.abs(P.net))}</div>
+    ${[[t.income,P.inc,'var(--sky)'],[t.expenses,P.out,'#7A7568']].map(([l,v,c])=>`<div><div class="between" style="font-size:13px;font-weight:700"><span>${l}</span><span>${money(v)}</span></div><div style="height:10px;border-radius:5px;background:#3A3A3A;margin-top:4px"><div style="height:100%;border-radius:5px;width:${v/mx*100}%;background:${c}"></div></div></div>`).join('')}
+  </div>
+  <button class="big bluebtn" style="height:auto;min-height:62px;padding:8px;flex-direction:column;gap:0" data-act="go" data-v="receipt"><span class="row" style="gap:8px">${icon.camera.replace('#FFD54A','#fff')}${t.snap.toUpperCase()}</span><span style="font-family:Barlow;font-size:12px;font-weight:600;letter-spacing:0">${t.snapD}</span></button>
+  <h2 class="h" style="font-size:22px">${t.byCat.toUpperCase()}</h2>
+  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+    ${CATS.filter(c=>P.byCat[c]).sort((a,b)=>P.byCat[b]-P.byCat[a]).map(c=>`<div><div class="between" style="font-size:14px"><span class="row" style="gap:8px;font-weight:700"><span style="width:10px;height:10px;border-radius:3px;background:${CATCOL[c]}"></span>${t[c]}</span><b>${money(P.byCat[c])}</b></div><div style="height:6px;border-radius:3px;background:var(--line);margin-top:4px"><div style="height:100%;border-radius:3px;width:${P.byCat[c]/P.out*100}%;background:${CATCOL[c]}"></div></div></div>`).join('')}
+    <div class="muted" style="font-size:12px">${t.subAuto}</div>
+  </div>
+  <h2 class="h" style="font-size:22px">${t.byJob.toUpperCase()}</h2>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    ${PJOBS.map(j=>{const i=incomeOf(j),c=S.exp.filter(e=>e.job===j).reduce((x,e)=>x+e.amt,0),n=i-c;return `<div class="card row"><div style="flex:1;min-width:0"><div style="font-weight:800">${j}</div><div class="muted" style="font-size:13px">${t.jobCost(whole(i),whole(c))}</div></div><span class="h" style="font-size:20px;color:${n>=0?'#11643C':'#A3152A'}">${n<0?'−':''}${whole(Math.abs(n))}</span></div>`}).join('')}
+  </div>
+  <h2 class="h" style="font-size:22px">${t.recent.toUpperCase()}</h2>
+  <div class="card" style="padding:4px 14px">
+    ${recent.map(e=>`<div class="row" style="padding:9px 0;border-bottom:1px solid var(--line);gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:${CATCOL[e.cat]};flex-shrink:0"></span><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">${e.v}${e.isNew?` <span class="chip c-est" style="font-size:10px;padding:2px 6px">${t.newTag}</span>`:''}</div><div class="muted" style="font-size:12px">${t.mon(e.d)} · ${t[e.cat]}${e.job?' · '+e.job:''}</div></div><b>${money(e.amt)}</b></div>`).join('')}
+  </div>
+  <button class="big ghost" data-act="copyPnl">${t.copyPnl}</button>`}
+
+function receipt(t){
+  const r=S.rc;
+  const jobs=[[null,t.noJob],...PJOBS.map(j=>[j,j])];
+  return `
+<div class="row" style="padding:16px 16px 4px 12px;gap:6px">
+  <button data-act="go" data-v="bills" aria-label="${t.back}" style="width:44px;height:44px;border:none;background:none">${icon.back}</button>
+  <h1 class="h" style="font-size:28px">${t.rcptH.toUpperCase()}</h1>
+</div>
+<div class="pad" style="padding-top:4px;gap:14px">
+  ${!r.draft?`<div style="border-radius:18px;padding:14px;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;display:flex;flex-direction:column;gap:10px">
+    <div class="row" style="gap:10px">${icon.camera}<div style="font-weight:800">${t.pickRcpt}</div></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${['lumber','fuel','hw'].map(k=>`<button data-act="rcptPick" data-v="${k}" style="padding:0;border:none;border-radius:12px;overflow:hidden;background:none;position:relative;aspect-ratio:3/4" aria-label="${t['rs_'+k]}">${rcptSvg(k)}<span style="position:absolute;left:4px;bottom:4px;background:var(--blue);color:#111111;font-size:10px;font-weight:800;padding:2px 6px;border-radius:999px">${t['rs_'+k]}</span></button>`).join('')}</div>
+    <div style="font-size:12px;color:#BDB49A">${t.rcptDemo}</div></div>`
+  :`<div class="chip c-est" style="white-space:normal;text-align:center">✦ ${t.found}</div>
+  <div class="row" style="gap:12px;align-items:flex-start"><div style="width:110px;flex-shrink:0;border-radius:12px;overflow:hidden;aspect-ratio:3/4">${rcptSvg(r.key)}</div>
+    <div class="card" style="flex:1;display:flex;flex-direction:column;gap:6px;padding:12px">
+      <div><div class="tag">${t.vendor}</div><div style="font-weight:800">${r.draft.v}</div></div>
+      <div><div class="tag">${t.rDate}</div><div style="font-weight:700">${t.mon(r.draft.d)}</div></div>
+      <div class="between"><div><div class="tag">${t.tax}</div><div style="font-weight:700">${money(r.draft.tax)}</div></div><div style="text-align:right"><div class="tag">${t.total}</div><div class="h" style="font-size:24px">${money(r.draft.amt)}</div></div></div>
+    </div></div>
+  <div><h2 style="margin:0 0 8px;font-size:15px">${t.category}</h2><div style="display:flex;flex-wrap:wrap;gap:8px">${['c_mat','c_fuel','c_tools','c_sub','c_other'].map(c=>`<button class="pill ${r.draft.cat===c?'on':''}" data-act="rcptCat" data-v="${c}" aria-pressed="${r.draft.cat===c}">${t[c]}</button>`).join('')}</div></div>
+  <div><h2 style="margin:0 0 8px;font-size:15px">${t.forJob}</h2><div style="display:flex;flex-direction:column;gap:8px">${jobs.map(([j,l])=>`<button class="opt ${r.draft.job===j?'on':''}" data-act="rcptJob" data-v="${j||''}" aria-pressed="${r.draft.job===j}" style="padding:10px 14px"><span class="dot"></span><span style="font-weight:800">${l}</span></button>`).join('')}</div></div>
+  <button class="big bluebtn" data-act="rcptSave">${icon.check()}&nbsp;${t.saveRcpt}</button>`}
+</div>
+${r.reading?`<div class="sheetWrap" style="align-items:center;justify-content:center"><div style="background:#fff;border-radius:18px;padding:22px;width:240px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center">
+  <div style="width:150px;border-radius:12px;overflow:hidden;aspect-ratio:3/4;position:relative">${rcptSvg(r.reading)}<div class="scan"></div></div>
+  <div class="h" style="font-size:22px">${t.readingR}</div></div></div>`:''}`}
+
+const PEOPLE={marcus:{n:'Marcus',c:'#8A6500',role:'r_owner'},dre:{n:'Dre',c:'#111111',role:'r_lead'},tony:{n:'Tony',c:'#4E6B2F',role:'r_plumb'},luis:{n:'Luis',c:'#6B8E23',role:'r_help'},james:{n:'James',c:'#7A7568',role:'r_appr'},
+  bce:{n:'Bull City Irrigation',c:'#3A3A3A',sub:true,trade:'tr_elec'},tdw:{n:'Triangle Tree Service',c:'#3A3A3A',sub:true,trade:'tr_dry'}};
+const BAD=/\b(f+u+c+k\w*|sh+i+t\w*|bitch\w*|ass(hole)?|bastard|dick|piss\w*|damn\w*|crap\w*|cunt|whore|slut|porn\w*|nude\w*)\b/i;
+function seedChat(){return [
+  {id:'team',name:'th_team',unread:1,msgs:[
+    {who:'marcus',txt:'Safety meeting Monday 6:45 AM at the yard. Eye and ear protection on every mower, no exceptions.',t:'Fri 4:10 PM',pinned:true,tags:[]},
+    {who:'tony',txt:'Mower 3 is throwing its belt again. Parking it till Tuesday.',t:'Sat 8:02 AM',tags:['marcus'],flag:{open:true,by:'tony'}},
+    {who:'marcus',txt:'Thanks @Tony. I’ll get a new belt from the dealer Monday.',t:'Sat 8:15 AM',tags:['tony']}]},
+  {id:'hend',name:'The Hendersons',job:'Mulch beds + shrub trim',unread:0,msgs:[
+    {who:'marcus',txt:'Side gate code 2290. Dog in the backyard — keep the gate shut.',t:'Thu 6:40 PM',pinned:true,tags:[]},
+    {who:'tony',txt:'Beds are full of weeds and the old mulch is gone. Pulling everything first.',t:'11:12 AM',photo:{after:false,kind:'heater'},tags:[]},
+    {who:'marcus',txt:'@Tony take the steel edging off the trailer too.',t:'11:20 AM',tags:['tony']},
+    {who:'tony',txt:'Fresh mulch down and edged ✅',t:'2:48 PM',photo:{after:true,kind:'heater'},tags:[]}]},
+  {id:'oak',name:'Oak St Rentals',job:'Leaf cleanup, units A–C',unread:2,msgs:[
+    {who:'marcus',txt:'Property manager wants all three buildings done before the Dec 1 inspection.',t:'Mon 7:05 AM',pinned:true,tags:[]},
+    {who:'dre',txt:'Leaves are knee deep behind building C and the gutters are overflowing. @Marcus want us to add the gutters today?',t:'2:41 PM',photo:{after:false,kind:'wall'},tags:['marcus'],flag:{open:true,by:'dre'}},
+    {who:'tdw',txt:'We can take down that dead oak by building B on Tuesday morning.',t:'3:02 PM',tags:[]}]},
+  {id:'brooks',name:'Brooks',job:'Backyard patio + plantings',unread:1,msgs:[
+    {who:'marcus',txt:'Mrs. Brooks wants the pavers in charcoal blend, NOT tan.',t:'Nov 9',pinned:true,tags:[]},
+    {who:'marcus',txt:'@James you’re with Dre on the patio Wednesday. Bring the plate compactor.',t:'1:15 PM',tags:['james','dre']},
+    {who:'james',txt:'Got it 👍',t:'1:22 PM',tags:[]},
+    {who:'bce',txt:'Can we get in Thursday to run the drip line before the plantings go in?',t:'3:30 PM',tags:['marcus'],flag:{open:true,by:'bce'}}]}
+];}
+const pName=id=>PEOPLE[id]?PEOPLE[id].n:id;
+const pav=(id,sz)=>{const p=PEOPLE[id];sz=sz||34;return `<span class="av" style="background:${p.c};width:${sz}px;height:${sz}px;border-radius:${sz/2}px;font-size:${sz*.45}px;border:none">${p.n[0]}</span>`};
+const thName=(th,t)=>th.id==='team'?t.th_team:th.name;
+const openFlags=()=>S.chat.threads.reduce((x,th)=>x+th.msgs.filter(m=>m.flag&&m.flag.open).length,0);
+const fmtTxt=txt=>txt.replace(/@(\w+)/g,'<b style="color:#8A6500">@$1</b>');
+
+function chat(t){
+  const C=S.chat, fl=C.tab==='flagged';
+  const flagged=[];C.threads.forEach(th=>th.msgs.forEach((m,i)=>{if(m.flag)flagged.push({th,m,i})}));
+  return `
+<div class="pad" style="padding-top:24px;gap:14px">
+  <h1 class="h" style="font-size:32px">${t.chatH.toUpperCase()}</h1>
+  <div class="segw" role="group"><button class="${fl?'':'on'}" data-act="chatTab" data-v="threads">${t.threadsTab}</button><button class="${fl?'on':''}" data-act="chatTab" data-v="flagged">🚩 ${t.flaggedTab}${openFlags()?` (${openFlags()})`:''}</button></div>
+  ${fl?(flagged.length?flagged.map(({th,m,i})=>`<div class="card" style="display:flex;flex-direction:column;gap:8px;${m.flag.open?'border-left:4px solid #D93348':'opacity:.7'}">
+      <div class="row" style="gap:10px">${pav(m.who)}<div style="flex:1;min-width:0"><div style="font-weight:800">${pName(m.who)} <span class="muted" style="font-weight:600;font-size:13px">· ${thName(th,t)}</span></div><div class="muted" style="font-size:12px">${m.t}</div></div></div>
+      <div style="font-size:15px">${fmtTxt(m.txt)}</div>
+      ${m.photo?`<div class="photo" style="max-width:160px">${photoSvg(m.photo.after,m.photo.kind)}</div>`:''}
+      <div class="between"><span class="chip ${m.flag.open?'c-over':'c-paid'}" style="font-size:12px;padding:4px 9px">${m.flag.open?t.flaggedBy(pName(m.flag.by)):t.resolvedBy(pName(m.flag.res||'marcus'))}</span>
+        <span class="row" style="gap:6px">${m.flag.open?`<button class="pill" style="min-height:38px;background:var(--ink);color:#fff;border-color:var(--ink)" data-act="resolveFlag" data-v="${th.id}:${i}">${t.resolve}</button>`:''}<button class="pill" style="min-height:38px" data-act="openThread" data-v="${th.id}">${t.openIn}</button></span></div>
+    </div>`).join(''):`<div class="card muted" style="text-align:center;padding:24px">${t.noFlags}</div>`)
+  :C.threads.map(th=>{const last=th.msgs[th.msgs.length-1],pin=th.msgs.find(m=>m.pinned),f=th.msgs.filter(m=>m.flag&&m.flag.open).length;
+    return `<button class="card row" data-act="openThread" data-v="${th.id}" style="align-items:flex-start">
+      <div class="ico" style="background:${th.id==='team'?'var(--blue)':'var(--ink)'};color:#fff;font-family:'Barlow Condensed';font-weight:800;font-size:18px">${th.id==='team'?icon.hardhat:th.name[0]}</div>
+      <div style="flex:1;min-width:0"><div class="between"><span style="font-weight:800">${thName(th,t)}</span><span class="muted" style="font-size:12px">${last.t}</span></div>
+        ${th.job?`<div style="font-size:13px;font-weight:600">${th.job}</div>`:''}
+        <div class="muted" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pName(last.who)}: ${last.photo?'📷 ':''}${last.txt}</div>
+        ${pin?`<div style="font-size:12px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📌 ${pin.txt}</div>`:''}</div>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${th.unread?`<span class="badge" style="position:static">${th.unread}</span>`:''}${f?`<span style="font-size:14px">🚩</span>`:''}</div>
+    </button>`}).join('')}
+</div>${tabs(t,'chat')}`}
+
+function thread(t){
+  const C=S.chat, th=C.threads.find(x=>x.id===C.open), pins=th.msgs.filter(m=>m.pinned);
+  const crewIds=['marcus','dre','tony','luis','james'], subIds=['bce','tdw'];
+  return `
+<div class="row" style="padding:12px 12px 8px 8px;gap:6px;background:#fff;border-bottom:1px solid var(--line)">
+  <button data-act="go" data-v="chat" aria-label="${t.back}" style="width:44px;height:44px;border:none;background:none">${icon.back}</button>
+  <div style="flex:1;min-width:0"><div style="font-weight:800;font-size:17px">${thName(th,t)}</div>${th.job?`<div class="muted" style="font-size:13px">${th.job}</div>`:''}</div>
+</div>
+${pins.length?`<div style="background:var(--ice);border-bottom:1px solid #F2E2A6;padding:8px 14px;display:flex;flex-direction:column;gap:4px">${pins.map(m=>`<div class="row" style="gap:8px;font-size:13px"><span>📌</span><span style="flex:1"><b>${pName(m.who)}:</b> ${fmtTxt(m.txt)}</span></div>`).join('')}</div>`:''}
+<div id="msgs" style="flex:1;padding:14px;display:flex;flex-direction:column;gap:12px;overflow-y:auto">
+  ${th.msgs.map((m,i)=>{const me=m.who==='marcus';return `<div style="display:flex;gap:8px;${me?'flex-direction:row-reverse':''};align-items:flex-end">
+    ${me?'':pav(m.who,30)}
+    <div style="max-width:76%;display:flex;flex-direction:column;gap:3px;align-items:${me?'flex-end':'flex-start'}">
+      <div style="font-size:12px;font-weight:700" class="muted">${me?'':pName(m.who)+(PEOPLE[m.who].sub?` · <span style="color:var(--blueD)">${t.subTag}</span>`:'')+' · '}${m.t}</div>
+      <div style="background:${me?'var(--blue)':'#fff'};color:var(--ink);border:${me?'none':'1px solid var(--line)'};border-radius:16px;${me?'border-bottom-right-radius:4px':'border-bottom-left-radius:4px'};padding:${m.photo?'4px':'9px 12px'};font-size:15px;${m.flag&&m.flag.open?'box-shadow:0 0 0 2px #D93348':''}">
+        ${m.photo?`<div class="photo" style="width:190px;border-radius:12px">${photoSvg(m.photo.after,m.photo.kind)}</div>`:''}
+        <div style="${m.photo?'padding:6px 8px 4px':''}">${me?m.txt.replace(/@(\w+)/g,'<b>@$1</b>'):fmtTxt(m.txt)}</div></div>
+      <div class="row" style="gap:6px;flex-wrap:wrap;${me?'justify-content:flex-end':''}">
+        ${m.pinned?`<span class="chip c-est" style="font-size:11px;padding:2px 7px">📌 ${t.pinnedLbl}</span>`:''}
+        ${m.flag?`<span class="chip ${m.flag.open?'c-over':'c-paid'}" style="font-size:11px;padding:2px 7px">${m.flag.open?'🚩 '+t.flaggedBy(pName(m.flag.by)):'✓ '+t.resolvedBy(pName(m.flag.res||'marcus'))}</span>`:''}
+        ${m.tags&&m.tags.length?`<span class="muted" style="font-size:11px;font-weight:700">${t.loopedIn}: ${m.tags.map(pName).join(', ')}</span>`:''}
+        <button data-act="msgMenu" data-v="${i}" aria-label="More" style="border:none;background:none;font-weight:800;font-size:18px;min-width:36px;min-height:28px;color:#8E8A78">⋯</button>
+      </div></div></div>`}).join('')}
+</div>
+<div style="background:#fff;border-top:1px solid var(--line);padding:10px 12px 16px;display:flex;flex-direction:column;gap:8px">
+  ${C.draftTags.length||C.draftPhoto?`<div class="row" style="gap:6px;flex-wrap:wrap">${C.draftPhoto?`<span class="chip c-est" style="font-size:12px;padding:4px 9px">📷 ${t.photoOn} <button data-act="dPhoto" style="border:none;background:none;font-weight:800;padding:0 0 0 4px;color:inherit" aria-label="remove">✕</button></span>`:''}${C.draftTags.map(id=>`<span class="chip" style="background:var(--ink);color:#fff;font-size:12px;padding:4px 9px">@${pName(id)} <button data-act="untag" data-v="${id}" style="border:none;background:none;color:#fff;font-weight:800;padding:0 0 0 4px" aria-label="remove">✕</button></span>`).join('')}</div>`:''}
+  <div class="row" style="gap:6px">
+    <button data-act="dPhoto" aria-label="${t.addPhoto}" style="width:44px;height:44px;border-radius:12px;border:2px solid var(--line2);background:${C.draftPhoto?'var(--ice)':'#fff'};flex-shrink:0;display:flex;align-items:center;justify-content:center">${icon.camera.replace('#FFD54A','#C79500').replace('width="28" height="28"','width="22" height="22"')}</button>
+    <button data-act="tagMenu" aria-label="@" style="width:44px;height:44px;border-radius:12px;border:2px solid var(--line2);background:${C.tagOpen?'var(--ice)':'#fff'};font-weight:800;font-size:20px;flex-shrink:0">@</button>
+    <input id="msgIn" class="fld" style="min-height:44px;flex:1;min-width:0" placeholder="${t.msgPh}" value="${C.draft.replace(/"/g,'')}">
+    <button data-act="sendMsg" aria-label="${t.send}" style="width:44px;height:44px;border-radius:22px;border:none;background:var(--blue);flex-shrink:0;display:flex;align-items:center;justify-content:center">${icon.send('#fff')}</button>
+  </div>
+  <div class="muted" style="font-size:11px;text-align:center">🛡 ${t.cleanNote}</div>
+</div>
+${C.tagOpen?`<div class="sheetWrap"><div class="sheet" style="align-items:stretch;text-align:left;gap:8px;padding:20px;max-height:85%;overflow-y:auto">
+  <h2 class="h" style="font-size:24px">${t.loopWho.toUpperCase()}</h2>
+  <div class="tag">${t.crewL}</div>
+  ${crewIds.map(id=>`<button class="opt ${C.draftTags.includes(id)?'on':''}" data-act="tag" data-v="${id}" style="padding:8px 12px">${pav(id,30)}<span style="flex:1;font-weight:800">${pName(id)}</span><span class="muted" style="font-size:13px">${t[PEOPLE[id].role]}</span></button>`).join('')}
+  <div class="tag" style="margin-top:4px">${t.subsL}</div>
+  ${subIds.map(id=>`<button class="opt ${C.draftTags.includes(id)?'on':''}" data-act="tag" data-v="${id}" style="padding:8px 12px">${pav(id,30)}<span style="flex:1;font-weight:800">${pName(id)}</span><span class="muted" style="font-size:13px">${t[PEOPLE[id].trade]}</span></button>`).join('')}
+  <button class="big bluebtn" style="height:50px;font-size:18px;margin-top:6px" data-act="tagMenu">${t.close}</button>
+</div></div>`:''}
+${C.menu!==null?(()=>{const m=th.msgs[C.menu];return `<div class="sheetWrap"><div class="sheet" style="align-items:stretch;gap:10px;padding:22px">
+  <div class="muted" style="font-size:14px;text-align:left"><b>${pName(m.who)}:</b> ${m.txt}</div>
+  <button class="big ghost" data-act="pinMsg">${m.pinned?t.unpin:t.pinIt}</button>
+  <button class="big ${m.flag&&m.flag.open?'blackbtn':'ghost'}" data-act="flagMsg">${m.flag&&m.flag.open?t.resolve:t.flagIt}</button>
+  <button class="link" data-act="msgMenu" data-v="">${t.close}</button></div></div>`})():''}
+${S.toast?`<div class="toast" role="status" style="bottom:110px">${S.toast}</div>`:''}`}
+
+function pfCalc(){
+  const pf=S.pf, crew=S.emps.filter(e=>e.id!=='marcus'), W=4.33;
+  const wages=crew.reduce((x,e)=>x+e.rate*(pf.hpw[e.id]??40),0), paid=crew.reduce((x,e)=>x+(pf.hpw[e.id]??40),0);
+  const labMo=wages*(1+pf.burden/100)*W, billHrs=paid*Math.max(1,pf.bill)/100*W, ovT=pf.ovh.reduce((x,o)=>x+o[1],0);
+  const L=billHrs?labMo/billHrs:0, O=billHrs?ovT/billHrs:0, B=L+O, C=pf.mg<100?B/(1-pf.mg/100):B;
+  return {crew,labMo,billHrs,ovT,L,O,B,C};
+}
+const f2=n=>'$'+n.toFixed(2);
+const rateChip=t=>{const r=pfCalc();const cls=RATE>=r.C?'c-paid':RATE>=r.B?'c-wait':'c-over';const txt=RATE>=r.C?t.chipOk(RATE,f2(r.C)):RATE>=r.B?t.chipWarn(RATE,f2(r.C)):t.chipBad(RATE,f2(r.B));
+  return `<button class="chip ${cls}" data-act="openPf" style="border:none;white-space:normal;text-align:left;font-size:12px">${txt} ›</button>`};
+function pfOut(t){
+  const r=pfCalc(), pf=S.pf, pct=RATE?Math.round((RATE-r.B)/RATE*100):0, rev=r.billHrs*RATE, prof=rev-r.labMo-r.ovT, jh=pf.jh;
+  const ln=(a,b,st)=>`<div class="line" style="padding:5px 0;${st||''}"><span>${a}</span><span>${b}</span></div>`;
+  const tot=(a,v)=>`<div class="line" style="border-top:2px dashed var(--line);margin-top:4px;padding-top:9px;font-weight:800"><span>${a}</span><span style="color:${v>=0?'#11643C':'#A3152A'}">${v<0?'−':''}${whole(Math.abs(v))}</span></div>`;
+  return {
+    top:`<div class="stats" style="grid-template-columns:1fr 1fr">
+      <div class="stat" style="background:#fff;border:1px solid var(--line)"><small>${t.pfLabor}</small><b>${f2(r.L)}</b></div>
+      <div class="stat" style="background:#fff;border:1px solid var(--line)"><small>${t.pfOvh}</small><b>${f2(r.O)}</b></div>
+      <div class="stat" style="background:#fff;border:1px solid var(--line)"><small>${t.pfBE}</small><b>${f2(r.B)}</b></div>
+      <div class="stat" style="background:var(--blue);color:#111111"><small>${t.pfCharge}</small><b>${f2(r.C)}</b></div></div>`,
+    msg:`<div class="chip ${RATE>=r.C?'c-paid':RATE>=r.B?'c-wait':'c-over'}" style="white-space:normal;border-radius:12px;padding:10px 12px;font-size:14px">${RATE>=r.C?t.pfOk(RATE,pct):RATE>=r.B?t.pfWarn(RATE,pct,pf.mg,f2(r.C)):t.pfBad(RATE,f2(r.B-RATE))}</div>`,
+    month:ln(t.pfBillHrs,Math.round(r.billHrs)+' hrs')+ln(t.pfLabBilled,whole(rev))+ln(t.pfCrewCost,'−'+whole(r.labMo))+ln(t.pfOverhead,'−'+whole(r.ovT))+tot(t.pfProfit,prof),
+    job:ln(t.pfCost,whole(jh*r.B))+ln(t.pfAtTarget(f2(r.C)),whole(jh*r.C))+ln(t.pfAtRate(RATE),whole(jh*RATE))+tot(t.pfJobProfit,jh*(RATE-r.B)),
+    ovT:whole(r.ovT), mg:pf.mg+'%'};
+}
+function pfRefresh(){const o=pfOut(T[lang]);[['pfTop','top'],['pfMsg','msg'],['pfMonth','month'],['pfJob','job'],['pfOvT','ovT'],['pfMg','mg']].forEach(([id,k])=>{const el=document.getElementById(id);if(el)el.innerHTML=o[k];});}
+function pfView(t){
+  const r=pfCalc(), pf=S.pf, o=pfOut(t);
+  const num=(attr,val,w)=>`<input type="number" inputmode="decimal" class="fld" ${attr} value="${val}" style="width:${w||76}px;min-height:40px;padding:6px 8px;text-align:right;font-weight:700">`;
+  const row=(a,b)=>`<div class="between" style="gap:10px;padding:4px 0;font-size:14px"><span style="font-weight:700">${a}</span><span class="row" style="gap:6px">${b}</span></div>`;
+  return `
+  <div class="muted" style="font-size:13px">${t.pfLive}</div>
+  <div id="pfTop">${o.top}</div>
+  <div class="card" style="display:flex;flex-direction:column;gap:8px">
+    ${row(t.pfCur,'$ '+num('data-pfk="cur"',RATE,70)+' /hr')}
+    <div class="between" style="gap:10px;font-size:14px"><span style="font-weight:700">${t.pfTarget}</span><span class="row" style="gap:8px;flex:1;max-width:200px"><input type="range" min="0" max="40" step="1" value="${pf.mg}" data-pfk="mg" style="flex:1;accent-color:var(--blue)"><b id="pfMg" style="min-width:36px;text-align:right">${o.mg}</b></span></div>
+    <div id="pfMsg">${o.msg}</div>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:2px">
+    <h2 class="h" style="font-size:20px">${t.pfCrew.toUpperCase()}</h2>
+    <div class="between muted" style="font-size:12px;font-weight:800"><span></span><span class="row" style="gap:6px"><span style="width:76px;text-align:right">${t.pfRate}</span><span style="width:76px;text-align:right">${t.pfHrs}</span></span></div>
+    ${r.crew.map(e=>row(`<span class="row" style="gap:8px"><span class="av" style="background:${e.c};width:26px;height:26px;font-size:13px;border:none">${e.n[0]}</span>${e.n}</span>`,num(`data-pfw="${e.id}"`,e.rate)+num(`data-pfh="${e.id}"`,pf.hpw[e.id]??40))).join('')}
+    <div style="border-top:1px solid var(--line);margin-top:6px;padding-top:6px"></div>
+    ${row(t.pfBurden,num('data-pfk="burden"',pf.burden,60)+'%')}
+    ${row(t.pfBill,num('data-pfk="bill"',pf.bill,60)+'%')}
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:2px">
+    <h2 class="h" style="font-size:20px">${t.pfOvhH.toUpperCase()}</h2>
+    ${pf.ovh.map((ov,i)=>row(t[ov[0]],'$ '+num(`data-pfo="${i}"`,ov[1],84))).join('')}
+    <div class="line" style="border-top:2px dashed var(--line);margin-top:4px;padding-top:9px;font-weight:800"><span>${t.pfOvT}</span><span id="pfOvT">${o.ovT}</span></div>
+  </div>
+  <div class="card"><h2 class="h" style="font-size:20px">${t.pfMonth.toUpperCase()}</h2><div id="pfMonth">${o.month}</div></div>
+  <div class="card"><h2 class="h" style="font-size:20px">${t.pfJob.toUpperCase()}</h2>
+    ${row(t.pfJobHrs,num('data-pfk="jh"',pf.jh,70)+' hrs')}<div id="pfJob">${o.job}</div></div>
+  <div class="muted" style="font-size:12px;text-align:center">${t.pfNote}</div>`}
+function pfInput(el){
+  const v=parseFloat(el.value), n=isNaN(v)?0:v, pf=S.pf;
+  if(el.dataset.pfw){const e=S.emps.find(x=>x.id===el.dataset.pfw);if(e)e.rate=n;}
+  else if(el.dataset.pfh){pf.hpw[el.dataset.pfh]=n;}
+  else if(el.dataset.pfo){pf.ovh[+el.dataset.pfo][1]=n;}
+  else if(el.dataset.pfk==='cur'){if(n>0)RATE=n;}
+  else if(el.dataset.pfk){pf[el.dataset.pfk]=n;}
+  pfRefresh();
+}
+const VIEWS={today,schedule,bills,billDetail,clients,bill,client,clientPaid,paid,signup,signupDone,crew,estimator,receipt,chat,thread};
+function render(){
+  const t=T[lang]; document.documentElement.lang=lang;
+  document.getElementById('len').classList.toggle('on',lang==='en');
+  document.getElementById('les').classList.toggle('on',lang==='es');
+  document.getElementById('restartBtn').setAttribute('aria-label',t.restart);document.getElementById('restartBtn').title=t.restart;
+  let key=S.screen==='bill'&&S.sent?'sent':S.screen;
+  if(key==='bills'&&S.moneyTab==='pnl') key='pnl';
+  if(key==='bills'&&S.moneyTab==='pf') key='pf';
+  if(key==='chat'&&S.chat.tab==='flagged') key='flagged';
+  if(key==='receipt') key=S.rc.draft?'receiptDraft':'receipt';
+  if(key==='crew') key=S.crewTab==='subs'?'subs':'crew';
+  if(key==='billDetail'){const bb=S.bills.find(x=>x.id===S.billId);if(bb&&isProg(bb))key='progress';}
+  if(key==='today'&&hb()&&hb().status==='paid') key='todayDone';
+  const who=['client','clientPaid','signup','signupDone'].includes(S.screen)?t.customer:['schedule','bills','billDetail','clients','crew','receipt','chat','thread'].includes(S.screen)?t.office:t.pro;
+  document.getElementById('hint').innerHTML=`<span class="who">${who}</span><span>${t['hint_'+key]}</span>`;
+  document.getElementById('app').innerHTML=VIEWS[S.screen](t);
+}
+let toastTimer;
+function toast(msg){S.toast=msg;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{S.toast='';render()},2600);}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const a=b.dataset.act, v=b.dataset.v, t=T[lang];
+  if(a==='lang'){lang=v;try{localStorage.setItem('yhub-lang',v)}catch(err){}}
+  else if(a==='restart'){S=fresh();}
+  else if(a==='go'){S.screen=v;S.toast=''; if(v!=='bill')S.sent=false;
+    if(v!=='crew')S.sheet=null;
+    if(v==='client'){const j=cb(); if(j&&j.status==='sent'){j.status='opened';j.ev.push(['opened',15,'3:20 PM']);}}
+    window.scrollTo(0,0);}
+  else if(a==='hrs'){S.hours=Math.min(12,Math.max(1,S.hours+(+v)));}
+  else if(a==='mat'){S.mats[v]=!S.mats[v];}
+  else if(a==='photos'){S.photos=!S.photos;}
+  else if(a==='send'){S.sent=true; const c=cur(); if(!cb()) S.bills.push({id:c.id,client:c.client,job:t[c.jobShort],d:15,amount:sub(),deposit:c.deposit,status:'sent',
+      ev:c.deposit?[['est',10,'6:15 PM'],['approved',10,'8:02 PM'],['deposit',11,'7:30 AM'],['sent',15,'3:12 PM']]:[['sent',15,'3:12 PM']]});}
+  else if(a==='newInv'){setBill(v||(hb()?'oak':'hendersons'));S.screen='bill';S.toast='';window.scrollTo(0,0);}
+  else if(a==='switchBill'){setBill(S.billFor==='hendersons'?'oak':'hendersons');}
+  else if(a==='crewTab'){S.crewTab=v;S.toast='';}
+  else if(a==='clockJob'){S.clock.job=v;}
+  else if(a==='clockIn'){S.clock.on=true;S.clock.start=Date.now();toast(t.clockedIn(S.clock.job));}
+  else if(a==='clockOut'){const ms=Date.now()-S.clock.start;const me=S.emps.find(e=>e.id==='marcus');me.wk+=ms/3600000;me.last=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});S.clock.on=false;toast(t.clockedOut(hms(ms),S.clock.job));}
+  else if(a==='sheet'){S.sheet=v||null;}
+  else if(a==='addPerson'){const A=esc((document.getElementById('fA')||{}).value||''),B=esc((document.getElementById('fB')||{}).value||'');
+    if(!A){return;}
+    if(S.sheet==='emp'){const r=parseFloat((document.getElementById('fC')||{}).value)||0;S.emps.push({id:'e'+Date.now(),n:A,c:'#7A7568',role:B||'r_new',rate:r,wk:0,invited:true});toast(t.empAdded(A));}
+    else{S.subs.push({id:'s'+Date.now(),n:A,trade:B,coi:'none',coiDate:'',w9:false,job:null,owed:0,ytd:0});toast(t.subAdded(A));}
+    S.sheet=null;}
+  else if(a==='sendMs'){const x=S.bills.find(y=>y.id===S.billId),m=x.ms[+v];m.st='sent';toast(t.msTexted(whole(m.amt),x.client));}
+  else if(a==='remindMs'){const x=S.bills.find(y=>y.id===S.billId),m=x.ms[+v];toast(`${t.reminded} ${x.client}`);}
+  else if(a==='recordMs'){const x=S.bills.find(y=>y.id===S.billId),m=x.ms.find(z=>z.st==='partial'||z.st==='sent');const amt=m.amt-m.paid;m.paid=m.amt;m.st='paid';m.date='Nov 15';x.ev.push(['progress',15,'4:20 PM']);
+    if(x.ms.every(z=>z.st==='paid')){x.status='paid';x.method='cash';}toast(t.recorded(whole(amt)));}
+  else if(a==='newEst'){S.est.back=v||'today';S.screen='estimator';S.toast='';window.scrollTo(0,0);}
+  else if(a==='estType'){S.est.type=v;S.est.dims={...EDEF[v]};S.est.per=0;S.est.fromPhoto=null;}
+  else if(a==='estOpt'){S.est[v]=!S.est[v];}
+  else if(a==='estFH'){S.est.dims.FH=+v;}
+  else if(a==='estGate'){S.est.dims.gates=Math.max(0,Math.min(6,S.est.dims.gates+(+v)));}
+  else if(a==='estCoat'){S.est.dims.coats=+v;}
+  else if(a==='estMk'){S.est.markup=+v;}
+  else if(a==='estPhoto'){S.est.reading=v;render();setTimeout(()=>{const g=PHOTOS[v];S.est.type=g.type;S.est.dims={...g.dims};Object.assign(S.est,g.flags);S.est.fromPhoto=v;S.est.reading=false;render();},1700);return;}
+  else if(a==='sendEst'){const r=calcEst(),n=esc(S.est.client)||'Ramirez',id='est'+Date.now();
+    S.bills.push({id,client:n,job:t['pt_'+S.est.type],d:15,amount:r.total,status:'estimate',ev:[['est',15,'4:30 PM']]});
+    S.billId=id;S.screen='billDetail';toast(t.estSent(n));window.scrollTo(0,0);}
+  else if(a==='copyMats'){const r=calcEst();const tsv=[['Qty','Item','Each','Total']].concat(r.it.map(i=>[i.qty,itemName(i,T.en),i.price.toFixed(2),(i.qty*i.price).toFixed(2)])).map(x=>x.join('\t')).join('\n');
+    try{navigator.clipboard.writeText(tsv).then(()=>{toast(t.copiedMats);render()},()=>{toast(t.copyFail);render()});}catch(err){toast(t.copyFail);}}
+  else if(a==='paySub'){const x=S.subs.find(y=>y.id===v);toast(t.paidSub(whole(x.owed),x.n));S.exp.push({v:x.n,cat:'c_sub',job:x.job?x.job.split(' — ')[0]:null,amt:x.owed,d:15,isNew:true});x.ytd+=x.owed;x.owed=0;}
+  else if(a==='chatTab'){S.chat.tab=v;}
+  else if(a==='openThread'){const C=S.chat;C.open=v;C.menu=null;C.tagOpen=false;C.draft='';C.draftTags=[];C.draftPhoto=false;C.threads.find(x=>x.id===v).unread=0;S.screen='thread';S.toast='';render();const el=document.getElementById('msgs');if(el)el.scrollTop=el.scrollHeight;return;}
+  else if(a==='resolveFlag'){const [tid,i]=v.split(':');const m=S.chat.threads.find(x=>x.id===tid).msgs[+i];m.flag.open=false;m.flag.res='marcus';}
+  else if(a==='tagMenu'){S.chat.draft=(document.getElementById('msgIn')||{}).value||S.chat.draft;S.chat.tagOpen=!S.chat.tagOpen;}
+  else if(a==='tag'){const C=S.chat;C.draftTags=C.draftTags.includes(v)?C.draftTags.filter(x=>x!==v):[...C.draftTags,v];}
+  else if(a==='untag'){S.chat.draft=(document.getElementById('msgIn')||{}).value||S.chat.draft;S.chat.draftTags=S.chat.draftTags.filter(x=>x!==v);}
+  else if(a==='dPhoto'){S.chat.draft=(document.getElementById('msgIn')||{}).value||S.chat.draft;S.chat.draftPhoto=!S.chat.draftPhoto;}
+  else if(a==='msgMenu'){S.chat.menu=v===''||v===undefined?null:+v;}
+  else if(a==='pinMsg'){const m=S.chat.threads.find(x=>x.id===S.chat.open).msgs[S.chat.menu];m.pinned=!m.pinned;S.chat.menu=null;}
+  else if(a==='flagMsg'){const m=S.chat.threads.find(x=>x.id===S.chat.open).msgs[S.chat.menu];if(m.flag&&m.flag.open){m.flag.open=false;m.flag.res='marcus';}else m.flag={open:true,by:'marcus'};S.chat.menu=null;}
+  else if(a==='sendMsg'){const C=S.chat, raw=((document.getElementById('msgIn')||{}).value||'').trim(), txt=esc(raw);
+    if(!txt&&!C.draftPhoto) return;
+    if(BAD.test(raw)){C.draft=raw;toast(t.cleanMsg);render();return;}
+    const th=C.threads.find(x=>x.id===C.open), tags=[...C.draftTags];
+    const body=(tags.length&&!tags.every(id=>txt.toLowerCase().includes('@'+pName(id).split(' ')[0].toLowerCase()))?tags.filter(id=>!txt.toLowerCase().includes('@'+pName(id).split(' ')[0].toLowerCase())).map(id=>'@'+pName(id).split(' ')[0]).join(' ')+' ':'')+txt;
+    th.msgs.push({who:'marcus',txt:body,t:'Now',tags,photo:C.draftPhoto?{after:true,kind:th.id==='oak'?'wall':'heater'}:null});
+    if(C.draftPhoto) toast(t.photoChecked);
+    C.draft='';C.draftTags=[];C.draftPhoto=false;C.tagOpen=false;
+    const rep=tags.find(id=>id!=='marcus');
+    if(rep){const tid=th.id;setTimeout(()=>{const x=S.chat.threads.find(y=>y.id===tid);x.msgs.push({who:rep,txt:PEOPLE[rep].sub?T[lang].autoSub:T[lang].autoCrew,t:'Now',tags:[]});if(S.screen==='thread'&&S.chat.open===tid){render();const el=document.getElementById('msgs');if(el)el.scrollTop=el.scrollHeight;}else x.unread++;},1800);}
+    render();const el=document.getElementById('msgs');if(el)el.scrollTop=el.scrollHeight;return;}
+  else if(a==='openPf'){S.screen='bills';S.moneyTab='pf';S.sent=false;S.toast='';window.scrollTo(0,0);}
+  else if(a==='moneyTab'){S.moneyTab=v;S.toast='';}
+  else if(a==='rcptPick'){S.rc.reading=v;render();setTimeout(()=>{const r=RCPTS[v];S.rc={reading:null,key:v,draft:{v:r.v,cat:r.cat,job:r.job,amt:r.amt,tax:r.tax,d:r.d}};render();},1700);return;}
+  else if(a==='rcptCat'){S.rc.draft.cat=v;}
+  else if(a==='rcptJob'){S.rc.draft.job=v||null;}
+  else if(a==='rcptSave'){const d=S.rc.draft;S.exp.push({v:d.v,cat:d.cat,job:d.job,amt:d.amt,d:d.d,isNew:true});S.rc={reading:null,draft:null,key:null};S.moneyTab='pnl';S.screen='bills';toast(t.savedR(money(d.amt)));window.scrollTo(0,0);}
+  else if(a==='copyPnl'){const P=pnlData();const rows=[['P&L — November 2026',''],['Income',P.inc.toFixed(2)]].concat(CATS.filter(c=>P.byCat[c]).map(c=>['Expense: '+T.en[c],P.byCat[c].toFixed(2)]),[['Total expenses',P.out.toFixed(2)],['Net profit',P.net.toFixed(2)],['',''],['Date','Store','Category','Job','Amount']],S.exp.map(e=>['2026-11-'+String(e.d).padStart(2,'0'),e.v,T.en[e.cat],e.job||'',e.amt.toFixed(2)]));
+    const tsv=rows.map(r=>r.join('\t')).join('\n');try{navigator.clipboard.writeText(tsv).then(()=>{toast(t.copiedPnl);render()},()=>{toast(t.copyFail);render()});}catch(err){toast(t.copyFail);}}
+  else if(a==='reqSub'){const x=S.subs.find(y=>y.id===v);toast(t.reqSent(x.n));}
+  else if(a==='copyTime'){
+    const rows=[['Name','Role','Hours this week','Rate','Pay']].concat(S.emps.filter(e=>e.id!=='marcus').map(e=>[e.n,T.en[e.role]||e.role,e.wk.toFixed(2),e.rate.toFixed(2),(e.wk*e.rate).toFixed(2)]));
+    const tsv=rows.map(r=>r.join('\t')).join('\n');
+    try{navigator.clipboard.writeText(tsv).then(()=>{toast(t.copiedTime);render()},()=>{toast(t.copyFail);render()});}catch(err){toast(t.copyFail);}
+  }
+  else if(a==='pay'){S.method=v;const j=cb(); if(j){j.amount=sub();j.status='paid';j.method=v;j.ev.push(['paid',15,'3:24 PM']);} S.screen='clientPaid';window.scrollTo(0,0);}
+  else if(a==='day'){S.day=+v;}
+  else if(a==='suMethod'){S.suMethod=v;}
+  else if(a==='suAuto'){S.suAuto=!S.suAuto;}
+  else if(a==='join'){const n=(document.getElementById('suName')||{}).value||'Jordan Ellis';S.newClient={name:n.replace(/[<>&"]/g,'')||'Jordan Ellis',method:S.suMethod,auto:S.suAuto};S.screen='signupDone';window.scrollTo(0,0);}
+  else if(a==='who'){S.who=v;}
+  else if(a==='filter'){S.filter=v;}
+  else if(a==='openBill'){S.billId=v;S.screen='billDetail';S.toast='';window.scrollTo(0,0);}
+  else if(a==='remind'){const x=S.bills.find(y=>y.id===S.billId);x.ev.push(['reminder',15,'4:15 PM']);toast(`${t.reminded} ${x.client}`);}
+  else if(a==='approve'){const x=S.bills.find(y=>y.id===S.billId);x.status='approved';x.ev.push(['approved',15,'4:16 PM']);}
+  else if(a==='cash'){const x=S.bills.find(y=>y.id===S.billId);x.status='paid';x.method='cash';x.ev.push(['paid',15,'4:16 PM']);}
+  else if(a==='toast'){toast(t[v]);}
+  else if(a==='copy'){
+    const rows=[['Client','Job','Date','Amount','Status','Paid on','Method']].concat(S.bills.map(x=>{const p=x.ev.find(e=>e[0]==='paid');
+      return [x.client,x.job,'2026-11-'+x.d,x.amount.toFixed(2),x.status,p?('2026-11-'+p[1]+' '+p[2]):'',x.method||'']}));
+    const tsv=rows.map(r=>r.join('\t')).join('\n');
+    try{navigator.clipboard.writeText(tsv).then(()=>{toast(t.copied);render()},()=>{toast(t.copyFail);render()});}catch(err){toast(t.copyFail);}
+  }
+  render();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='msgIn'){e.preventDefault();const b=document.querySelector('[data-act=sendMsg]');if(b)b.click();}});
+document.addEventListener('input',e=>{
+  const el=e.target;
+  if(el.matches&&el.matches('[data-pfk],[data-pfw],[data-pfh],[data-pfo]')){pfInput(el);return;}
+  if(el.dataset.dim){S.est.dims[el.dataset.dim]=parseFloat(el.value)||0;const o=document.getElementById('estOut');if(o){const keep=document.activeElement;o.innerHTML=estOut(T[lang]);}}
+  else if(el.hasAttribute('data-estclient')){S.est.client=el.value;}
+});
+render();
+setInterval(()=>{if(!S.clock.on)return;document.querySelectorAll('[data-timer]').forEach(el=>el.textContent=hms(Date.now()-S.clock.start));},1000);
+</script>
+</body>
+</html>

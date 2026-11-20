@@ -94,7 +94,7 @@ begin
   if ok = 0 then raise exception 'BAD_CODE'; end if;
   insert into businesses (name, phone) values (trim(p_business), coalesce(p_phone,'')) returning id into b;
   insert into members (user_id, business_id, name, role, color, phone)
-    values (auth.uid(), b, trim(p_name), 'owner', case when p_app = 'chub' then '#1F6FEB' else '#D6245E' end, coalesce(p_phone,''));
+    values (auth.uid(), b, trim(p_name), 'owner', case p_app when 'chub' then '#1F6FEB' when 'painters' then '#C62828' else '#D6245E' end, coalesce(p_phone,''));
   return b;
 end $$;
 grant execute on function create_business_v2(text, text, text, text, text) to authenticated;

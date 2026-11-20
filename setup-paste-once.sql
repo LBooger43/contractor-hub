@@ -79,10 +79,8 @@ create table if not exists owner_codes (
 );
 alter table owner_codes enable row level security;   -- no policies: only the sign-up function can read it
 
-insert into owner_codes (code, uses_left, note) values
-  ('HUB-JAXN-KE66', 1, 'Contractor Hub owner'),  ('HUB-HH9Y-DVJH', 1, 'Contractor Hub owner'),  ('HUB-9U4R-Y454', 1, 'Contractor Hub owner'),  ('HUB-2KC7-ZVCT', 1, 'Contractor Hub owner'),  ('HUB-MB59-JMYX', 1, 'Contractor Hub owner'),
-  ('LIMPIO-84YB-TU87', 1, 'Limpiempo owner'),  ('LIMPIO-8H4A-XZBU', 1, 'Limpiempo owner'),  ('LIMPIO-53TR-EC37', 1, 'Limpiempo owner')
-on conflict (code) do nothing;
+-- Codes are added straight in Supabase (never saved in this public repo):
+--   insert into owner_codes (code, uses_left, note) values ('XXXX-XXXX-XXXX', 1, 'note');
 
 -- New sign-up path: needs a code. p_app picks the owner's color.
 create or replace function create_business_v2(p_code text, p_business text, p_name text, p_phone text default '', p_app text default 'limpiempo')
